@@ -1,472 +1,367 @@
 # Claude Desktop Avatar – Projektplan
 
-> **Status:** Entwurf v0.2 · **Stand:** 5. November 2026 · Deine Entscheidungen zu den offenen Fragen sind eingearbeitet (Abschnitt 11).
+> **Status:** Entwurf v0.3 · **Stand:** 5. November 2026 · **Neu:** Umsetzung als Mod für Claude Code statt als eigene App, ohne Installer, nicht kommerziell.
 >
-> Detailkonzepte: [Avatar-Vorlagen](avatar-templates.md) · [Anbindung an Claude](claude-integration.md)
+> Detailkonzepte: [Mod-Konzept](mod-design.md) · [Avatar-Vorlagen](avatar-templates.md)
 
 ## Auf einen Blick
 
-- **Was:** Ein Desktop-Begleiter für Windows, der frei verschiebbar über allen Fenstern sitzt, per Klick, Tastenkürzel oder Stimme einen Claude-Chat startet und dir mit Text und Ton erzählt, woran deine Claude-Sitzungen gerade arbeiten.
-- **Plattform:** Windows 11. macOS und Linux sind vorerst nicht geplant.
-- **Aussehen:** 2D-Vorlagen (SVG, Sprites, optional Rive) mit anpassbaren Farben, Teilen, Größe, Stimme, Name und Persönlichkeit. Eigene Vorlagen entstehen ohne Programmierung.
-- **Chat über dein Abo:** Der Avatar steuert dein installiertes, angemeldetes Claude Code im Hintergrund oder übergibt Aufgaben per Deep Link an ein Terminal. Ein API-Schlüssel ist nicht nötig, und der Avatar fasst keine Zugangsdaten an.
-- **Live-Schritte aus allen Chats, soweit technisch möglich:** Claude-Code-Sitzungen vollständig über ein Plugin mit offiziellen HTTP-Hooks; Chats und Cowork-Aufgaben in Claude Desktop teilweise über einen MCP-Server des Avatars. claude.ai im Browser, Cloud-Sitzungen und die Smartphone-Apps sind nicht erreichbar.
-- **Sprachen:** Oberfläche, Ansagen und Sprachsteuerung auf Deutsch und Englisch.
-- **Technik:** Electron, TypeScript und React. Sprache läuft lokal (whisper.cpp, Windows-Stimmen oder Piper), Cloud-Dienste sind optional. Lizenz: MIT.
-- **Weg:** sechs Phasen, von Machbarkeits-Spikes über ein MVP (Avatar, Live-Schritte, Text-Chat) bis zu Stimme, Claude-Desktop-Anbindung, Vorlagen-Studio und Release.
+- **Was:** ein Jarvis-artiger Assistent für Claude Code. Er lebt in deiner offenen Claude-Code-Sitzung, hört auf Sprachbefehle, sagt dir, woran Claude gerade arbeitet, und meldet sich, wenn Claude dich braucht.
+- **Keine eigene App, kein Installer:** eine Erweiterung (Plugin mit Mod) für Claude Code, installiert mit einer Zeile, aktiv, solange Claude Code geöffnet ist.
+- **Sprechen:** über die eingebaute Spracheingabe von Claude Code (`/voice`, Leertaste halten oder antippen), auf Deutsch und Englisch.
+- **Hören:** Ansagen und Antworten über die Sprachausgabe von Windows, lokal auf dem Rechner.
+- **Sehen:** ein animierter Avatar in einer Seitenleiste neben dem Chat. In der Desktop-App ist er eine animierte Vektorgrafik, im Terminal Pixel-Art. Dazu kommen ein Band über der Eingabe, eine eigene „Denkt nach"-Animation, Hinweise und Systembenachrichtigungen.
+- **Über dein Abo:** Der Avatar ist Teil deiner Sitzung. Alles läuft über dein Claude-Abo, ohne API-Schlüssel und ohne Hintergrundprozess.
+- **Plattform:** Windows 11, im Terminal und im Code-Tab der Claude-Desktop-App. Lizenz: MIT, nicht kommerziell.
+- **Weg:** fünf Phasen, von einem Machbarkeits-Prototyp über ein MVP (Avatar, Live-Schritte, Ansagen) und die Jarvis-Sprachsteuerung bis zu Vorlagen und mehreren Sitzungen.
 
 ## 1. Vision & Kernfunktionen
 
-Claude arbeitet zunehmend selbstständig, oft in mehreren Sitzungen gleichzeitig. Der Avatar macht diese Arbeit sichtbar, ohne dass du zwischen Terminals und Fenstern wechseln musst, und er ist der kürzeste Weg zu einer neuen Frage. Er soll sich wie ein persönlicher Begleiter anfühlen: individuell gestaltet, unaufdringlich und nur dann laut, wenn es wichtig ist.
+Wie Jarvis bei Iron Man soll der Avatar ein Begleiter sein, mit dem man spricht, statt nur zu tippen. Er nimmt Aufträge per Stimme entgegen, gibt sie an Claude Code weiter und berichtet knapp, was passiert. Wenn Claude eine Freigabe braucht oder fertig ist, meldet er sich. Weil er eine Mod ist, braucht er kein eigenes Programm: Er nutzt, was Claude Code schon mitbringt (Sitzung, Abo, Spracheingabe), und ergänzt Präsenz, Stimme und Überblick.
 
-| # | Deine Idee | Umsetzung im Plan |
+| # | Deine Idee | Umsetzung als Mod |
 |---|---|---|
-| F1 | Avatar auf dem Desktop, verschiebbar | Transparentes, rahmenloses Fenster, immer im Vordergrund und außerhalb der Figur klick-durchlässig. Ziehen mit der Maus; die Position wird pro Monitor-Anordnung gemerkt. |
-| F2 | Aussehen anpassbar, z. B. über Templates | 2D-Vorlagen mit Parametern, Avatar-Profile, Avatar-Studio mit Live-Vorschau, Import/Export als `.avatarpack` |
-| F3 | Schnell einen Chat starten, per Schrift oder Sprache | Klick, globales Tastenkürzel oder Push-to-Talk mit lokaler Spracherkennung. Die Antwort kommt über dein Abo (lokales Claude Code), erscheint in der Sprechblase und wird auf Wunsch vorgelesen. |
-| F4 | Aktuelle Schritte aktiver Chats ausgeben, mit Schrift und Ton | Ein Aktivitäts-Hub sammelt Ereignisse aus Claude Code, eigenen Chats und Claude Desktop. Ein „Erzähler" formuliert kurze Texte, spielt Hinweistöne und spricht Wichtiges aus. |
+| F1 | Avatar auf dem Desktop, verschiebbar | Der Avatar sitzt **in Claude Code**: in einer Seitenleiste neben dem Chat, deren Breite du anpassen kannst, dazu kompakt im Band über der Eingabe und in der Statuszeile. Ein frei schwebendes Desktop-Fenster entfällt, denn es bräuchte ein eigenes Programm. |
+| F2 | Aussehen anpassbar, z. B. über Templates | Vorlagen mit Parametern (Farben, Teile, Name, Stimme, Stil). Jede Vorlage bringt eine Vektor-Variante für die Desktop-App und eine Pixel-Variante fürs Terminal mit. Angepasst wird in der Seitenleiste mit Live-Vorschau. |
+| F3 | Schnell einen Chat starten, per Schrift oder Sprache | Tippen wie gewohnt oder `/voice`. Gesprochene Aufträge gehen als normaler Prompt an deine Sitzung; Befehle an den Avatar selbst („Jarvis, Status") erledigt die Mod direkt. |
+| F4 | Aktuelle Schritte aktiver Chats ausgeben, mit Schrift und Ton | Die Mod sieht jeden Werkzeugaufruf, die Aufgabenliste und das Ende jeder Runde. Ein Erzähler formuliert kurze Texte, spielt Töne und spricht Wichtiges aus. Ein gemeinsamer Status-Ordner zeigt auch deine anderen offenen Claude-Code-Sitzungen. |
 
-**Abgrenzung:** Der Avatar ersetzt Claude Desktop nicht. Er nutzt dein Abo über das offizielle Claude Code und ergänzt es um Präsenz, Sprachsteuerung und Live-Schritte. Unter Windows schließt er außerdem eine Lücke: Die Schnelleingabe „Quick Entry" von Claude Desktop gibt es bisher nur auf dem Mac.
+## 2. Was eine Mod kann – und was nicht
 
-## 2. Nutzungsszenarien
+Mods sind Plugins mit einem Hooks-Modul (TypeScript), das sich in die Ereignisse und die Oberfläche von Claude Code einklinkt. Die Oberflächen heißen in der Mod-Schnittstelle `terminal`, `desktop` (Code-Tab der Claude-Desktop-App), `vscode` und `mobile`.
 
-1. **Parallel arbeiten:** Du lässt drei Claude-Code-Sitzungen in verschiedenen Projekten laufen. Am Avatar steht „webshop · Schritt 4/6 · Tests ausführen". Braucht eine Sitzung eine Freigabe, winkt der Avatar, spielt einen Ton und sagt: „Webshop braucht deine Freigabe."
-2. **Kurze Frage nebenbei:** Du hältst die Sprechtaste gedrückt und fragst: „Wie formatiere ich in Python ein Datum nach ISO 8601?" Die Antwort kommt über dein Abo, erscheint in der Sprechblase und wird vorgelesen. Das Codebeispiel öffnest du im erweiterten Panel. Fragst du auf Englisch, antwortet der Avatar auf Englisch.
-3. **Aufgabe delegieren:** „Starte im Projekt Webshop: Behebe den fehlschlagenden Checkout-Test." Der Avatar fragt nach und öffnet Claude Code im Projektordner mit vorbefülltem Auftrag. Du bestätigst mit Enter, danach erscheint der Fortschritt am Avatar.
-4. **Desktop-Chat im Blick:** In Claude Desktop läuft eine längere Recherche. Über den MCP-Server des Avatars meldet Claude „Recherche · Quellen vergleichen", und sobald das Ergebnis fertig ist, sagt der Avatar Bescheid.
-5. **Eigener Look:** Du wählst die Vorlage „Blob", stellst Petrol als Farbe ein, setzt ihm Kopfhörer auf, nennst ihn „Pixel" und gibst ihm eine ruhigere Stimme. Das Profil teilst du als Datei mit deinem Team.
-6. **Konzentriert arbeiten:** Im Nicht-stören-Modus oder während einer Präsentation schläft der Avatar. Nur dringende Hinweise kommen als dezenter Ton.
+| Fähigkeit | Mod-Schnittstelle | Nutzen für den Avatar |
+|---|---|---|
+| Seitenleiste | `$.ui.open` + `ui.render` für `Pane` | Avatar, aktueller Schritt, Fortschritt, andere Sitzungen |
+| Band über der Eingabe | `ui.render` für `AbovePrompt` | kompakter Status mit Mini-Avatar |
+| „Denkt nach"-Zeile | `ui.render` für `Spinner` | eigene Animation statt des Standard-Spinners |
+| Hintergrund | `$.ui.backdrop` (nur Desktop-App und Mobil) | optionales Jarvis-HUD hinter dem Chat |
+| Statuszeile, Hinweise, Systembenachrichtigung | `$.ui.status`, `$.ui.toast`, `$.ui.notify` | Schritte, Fertig-Meldungen, „Claude braucht dich" |
+| Grafik | `Svg` (Desktop-App, VS Code, Mobil; CSS- und SMIL-Animation) und `Raster` (Terminal: farbige Zeichenzellen, bildweise neu gezeichnet über `$.ui.blit`) | animierter Avatar je Oberfläche |
+| Sprachausgabe, Töne | `$.audio.speak` (Sprachausgabe des Systems), `$.audio.play` | Ansagen, Antworten vorlesen |
+| Prompts | `$.prompt.submit`, `$.prompt.fill`, `$.prompt.suggest`, `$.turn.abort` | Aufträge senden, Vorschläge machen, „Stopp" |
+| Ereignisse | `session.start`, `prompt.submit`, `tool.call`, `turn.start`, `turn.step`, `turn.complete` | Schritte, Fortschritt, Ende einer Runde |
+| KI-Aufrufe über die Sitzung | `$.model.complete`, `$.model.fork`, `$.model.classify` | „Was machst du gerade?", Zusammenfassungen, Befehlserkennung; abgerechnet über die Sitzung, also dein Abo |
+| Speicher | `$.store` (dauerhaft), `$.state` (Sitzung) | Einstellungen, Profil, Zustand |
+| Dateien, Prozesse, Zeitgeber | `$.fs`, `$.process`, `$.clock` | Vorlagen, gemeinsamer Status mehrerer Sitzungen, Windows-Rückfälle, Animation |
+| Befehle, Optionen | `$.command.register`, `userConfig` im Manifest | `/avatar …`, Einstellungen bei der Installation |
 
-## 3. Anforderungen
+**Grenzen, die den Plan prägen:**
+
+- **Kein Fenster außerhalb von Claude Code:** Der Avatar erscheint nur in den Oberflächen von Claude Code.
+- **Kein eigener Mikrofonzugriff:** Die Spracheingabe läuft über `/voice` von Claude Code. Laut Doku wird das Audio dabei auf Anthropics Servern in Text umgewandelt, nicht lokal (siehe Abschnitt 11).
+- **Kein Zugriff auf das Audiosignal:** Ein Lippen-Sync nach Lautstärke ist nicht möglich. Der Avatar zeigt stattdessen eine Sprech-Animation, solange er spricht.
+- **Töne im Windows-Terminal:** `$.audio.play` spielt dort laut Doku nichts ab. Rückfall ist der Windows-eigene Player über PowerShell.
+- **Sprachausgabe unter Windows:** Wie sich `$.audio.speak` dort verhält, ist nicht dokumentiert. Rückfall ist die Windows-Sprachausgabe (`System.Speech`) über PowerShell.
+- **Nur Claude Code:** In normalen Chats von Claude Desktop, in Cowork und auf claude.ai laufen keine Mods.
+- **Platz im Terminal:** Die Seitenleiste braucht ein breites Fenster. Ungefragt erscheint sie ab 144 Spalten, nach dem Öffnen per Befehl in jeder Breite; neben dem Chat angedockt wird sie im Vollbild-Modus von Claude Code.
+
+## 3. Nutzungsszenarien
+
+1. **„Jarvis, wie ist der Stand?"** Du hältst die Leertaste und fragst. Die Mod erkennt den Befehl an sich selbst und antwortet aus dem gemeinsamen Status: „Webshop: Schritt 4 von 6, die Tests laufen. Das API-Projekt wartet auf deine Freigabe."
+2. **Auftrag per Stimme:** „Behebe den fehlschlagenden Checkout-Test." Das geht als normaler Prompt an Claude. Der Avatar meldet die Schritte in der Seitenleiste und sagt am Ende: „Fertig. Alle Tests sind grün."
+3. **Freigabe nötig:** Der Avatar winkt, ein Ton erklingt, und er sagt: „Ich brauche deine Freigabe für npm install." Entschieden wird im Dialog von Claude Code per Klick oder Taste, nie per Sprache.
+4. **„Jarvis, stopp!"** Die laufende Runde wird abgebrochen.
+5. **Eigener Look:** Mit `/avatar aussehen` wählst du Vorlage, Farbe, Name, Stimme und Stil, z. B. „knapp" oder „britischer Butler".
+6. **Konzentriert arbeiten:** Nach `/avatar leise` kommen nur noch dringende Hinweise, und zwar als Ton.
+
+## 4. Anforderungen
 
 Prioritäten: **M** = Muss (MVP) · **S** = Soll · **K** = Kann (später)
 
-### 3.1 Funktional
+### 4.1 Funktional
 
-**F1 – Desktop-Präsenz**
-
-| ID | Anforderung | Prio |
-|---|---|---|
-| F1.1 | Transparentes, rahmenloses Fenster über allen anderen Fenstern, nicht in der Taskleiste | M |
-| F1.2 | Ziehen verschiebt den Avatar, ein Klick ohne Bewegung öffnet den Schnell-Chat, ein Rechtsklick das Kontextmenü | M |
-| F1.3 | Klicks außerhalb der Figur gehen an die Fenster darunter | M |
-| F1.4 | Die Position wird pro Monitor-Anordnung gemerkt; nach einem Monitorwechsel landet der Avatar wieder im sichtbaren Bereich | M |
-| F1.5 | Symbol im Infobereich der Taskleiste: ein-/ausblenden, Nicht stören, Profil wechseln, Sprache, Einstellungen, Beenden | M |
-| F1.6 | Autostart mit Windows | S |
-| F1.7 | Andocken am Bildschirmrand, Größe änderbar | S |
-| F1.8 | Augen folgen dem Mauszeiger, Leerlauf-Animationen, Einschlafen bei Inaktivität | K |
-| F1.9 | Bei Vollbild-Apps, Präsentationen und Windows-Ruhezeiten automatisch ausblenden bzw. stumm schalten | S |
-
-**F2 – Anpassbarkeit**
+**F1 – Präsenz in Claude Code**
 
 | ID | Anforderung | Prio |
 |---|---|---|
-| F2.1 | Mitgelieferte Vorlagen: mindestens 2 im MVP, 3–5 bis Phase 4 | M |
-| F2.2 | Parameter einer Vorlage (Farben, Teile, Größe) mit Live-Vorschau ändern | M |
-| F2.3 | Avatar-Profile (Vorlage + Werte + Name + Stimme + Persona), mehrere Profile umschaltbar | S |
-| F2.4 | Import/Export von Vorlagen und Profilen (`.avatarpack`) | S |
-| F2.5 | Eigene Vorlagen ohne App-Änderung: Ordner + `avatar.json`, Entwicklermodus mit Hot Reload und Validierung | S |
-| F2.6 | Renderer: SVG (M), Sprites (S), Rive (K); kein 3D | – |
-| F2.7 | Texte in Vorlagen (Namen, Beschriftungen, Begrüßung) auf Deutsch und Englisch | S |
-| F2.8 | Community-Galerie für Vorlagen | K |
+| F1.1 | Seitenleiste mit animiertem Avatar, aktuellem Schritt und Fortschritt | M |
+| F1.2 | Kompakter Status im Band über der Eingabe und in der Statuszeile | M |
+| F1.3 | Eigene „Denkt nach"-Animation im Spinner | S |
+| F1.4 | Läuft im Windows-Terminal und im Code-Tab der Desktop-App; VS Code mit Einschränkungen | M |
+| F1.5 | Optionales HUD als Hintergrund in der Desktop-App | K |
 
-**F3 – Schnell-Chat**
+**F2 – Aussehen**
 
 | ID | Anforderung | Prio |
 |---|---|---|
-| F3.1 | Texteingabe per Klick oder globalem Tastenkürzel; die Antwort kommt über dein lokales Claude Code (Abo), wird in die Sprechblase gestreamt und lässt sich zum Panel erweitern (Markdown, Code kopieren) | M |
-| F3.2 | Die Einrichtung prüft, ob Claude Code installiert und mit dem Abo angemeldet ist, und hilft sonst weiter | M |
-| F3.3 | Verlauf lokal speichern, „Neuer Chat", Modell wählbar (Opus, Sonnet, Haiku) | M |
-| F3.4 | Spracheingabe per Push-to-Talk mit lokaler Spracherkennung (Deutsch und Englisch) | M (Phase 2) |
-| F3.5 | Antworten vorlesen mit Lippen-Sync; Unterbrechen durch Sprechen oder Klick (Barge-in) | S |
-| F3.6 | Aufgabe an Claude Code übergeben: Projekt wählen, Deep Link mit vorbefülltem Auftrag | S |
-| F3.7 | „Frag nach dem Stand": Der Chat kennt die aktiven Sitzungen (nur reduzierte Zusammenfassungen) | S |
-| F3.8 | Hintergrund-Aufgaben in einem Projekt (Claude Code headless) mit Freigaben am Avatar | K |
-| F3.9 | Kontext anhängen: Zwischenablage, Screenshot (nur auf ausdrücklichen Klick) | K |
-| F3.10 | Aktivierungswort („Hey Pixel"), lokal und opt-in | K |
+| F2.1 | 2 mitgelieferte Vorlagen, jeweils als Vektor- und Pixel-Variante | M |
+| F2.2 | Farben, Teile, Name, Stimme und Stil in der Seitenleiste anpassen, mit Live-Vorschau | M |
+| F2.3 | Eigene Vorlagen als Ordner, mit automatischem Neuladen beim Bearbeiten | S |
+| F2.4 | Profile exportieren und importieren, Vorlagen teilen | K |
 
-**F4 – Live-Schritte**
+**F3 – Sprechen & Hören**
 
 | ID | Anforderung | Prio |
 |---|---|---|
-| F4.1 | Claude-Code-Sitzungen (Terminal, IDE, Code-Tab der Desktop-App) über ein Plugin anbinden (HTTP-Hooks) | M |
-| F4.2 | Anzeige pro Sitzung: aktueller Schritt, Fortschritt der Aufgabenliste („Schritt 3/7"), Status (arbeitet, wartet, fertig, Fehler) | M |
-| F4.3 | Dringendes (Freigabe oder Eingabe nötig, Abbruch) mit Zustand `attention`, Hinweiston und Sprachansage | M |
-| F4.4 | Sitzungsliste mit Projektname, Status und letztem Schritt; einzelne Sitzungen stummschaltbar | M |
-| F4.5 | Bündelung und Drosselung, damit keine Ansage-Flut entsteht | M |
-| F4.6 | Ausführlichkeitsstufen (Still, Normal, Gesprächig), getrennt für Text und Ton; Ruhezeiten | S |
-| F4.7 | Chats und Cowork-Aufgaben in Claude Desktop über den MCP-Server des Avatars (`avatar_status`, `avatar_say`) | S |
-| F4.8 | Optionaler MCP-Proxy: vorhandene MCP-Server durch den Avatar leiten, um ihre Werkzeugaufrufe in Desktop-Chats als Schritte zu sehen | K |
-| F4.9 | Freigaben direkt am Avatar beantworten (opt-in) | K |
-| F4.10 | Optionale KI-Zusammenfassung längerer Schrittfolgen | K |
+| F3.1 | Spracheingabe über `/voice` (Deutsch und Englisch), Einrichtung per Anleitung in der Mod | M |
+| F3.2 | Befehle an den Avatar selbst („<Name>, Status / stopp / leiser / Zusammenfassung") erledigt die Mod, ohne Claude zu fragen | S |
+| F3.3 | Antworten vorlesen: ein kurzer, vorlesbarer Einstieg, Details bleiben im Chat | M |
+| F3.4 | „Stopp" bricht die laufende Runde ab | S |
+| F3.5 | Lokale Spracherkennung als Alternative zu `/voice` | K |
 
-### 3.2 Nicht-funktional
+**F4 – Live-Schritte & Ansagen**
+
+| ID | Anforderung | Prio |
+|---|---|---|
+| F4.1 | Schritte aus Werkzeugaufrufen, Fortschritt aus der Aufgabenliste („Schritt 3/7") | M |
+| F4.2 | Dringendes (Freigabe nötig, Fehler) mit Animation, Ton, Ansage und Systembenachrichtigung | M |
+| F4.3 | Ausführlichkeitsstufen, Ruhezeiten, Bündelung und Drosselung | M |
+| F4.4 | Überblick über alle offenen Claude-Code-Sitzungen; nur eine Instanz spricht | S |
+| F4.5 | „Was machst du gerade?" als KI-Zusammenfassung aus der Sitzung | S |
+| F4.6 | Hinweis auf Nutzungslimits des Abos (z. B. 5-Stunden-Fenster) | K |
+| F4.7 | Normale Claude-Desktop-Chats über eine kleine Desktop-Erweiterung (`.mcpb`), die in den gemeinsamen Status meldet | K |
+
+### 4.2 Nicht-funktional
 
 | Bereich | Ziel |
 |---|---|
-| Ressourcen | Leerlauf unter 1 % CPU; RAM-Ziel unter 250 MB (in Phase 0 messen); flüssige Animation mit 60 fps, im Leerlauf gedrosselt |
-| Latenz | Hook bis Anzeige unter 300 ms; die Avatar-API beantwortet Hooks in unter 10 ms; Sprache: erste Audioausgabe unter 3 s nach Ende der Frage (Ziel, mit dauerhaft laufendem Chat-Prozess) |
-| Robustheit | Claude Code arbeitet unverändert weiter, wenn der Avatar nicht läuft oder hängt (fail-open) |
-| Voraussetzungen | Claude-Abo und installiertes Claude Code; kein API-Schlüssel |
-| Datenschutz | Lokal zuerst, keine Telemetrie. Cloud-Dienste für Sprache nur nach ausdrücklicher Aktivierung |
-| Sicherheit | Electron-Härtung (Context Isolation, Sandbox, CSP), lokale API nur auf Loopback, keine Claude-Zugangsdaten im Avatar, Vorlagen sind reine Daten |
-| Plattform | Windows 11 (x64; ARM64 später), Windows 10 ohne Garantie. Die Kernpakete bleiben plattformunabhängig, damit macOS oder Linux später möglich sind |
-| Barrierefreiheit | Tastaturbedienung, Screenreader-Beschriftungen, Windows-Einstellung für reduzierte Animationen, jede Sprachausgabe auch als Text |
-| Sprachen | Deutsch und Englisch von Anfang an (Oberfläche, Erzähler, Sprachein- und -ausgabe); Standard ist die Windows-Anzeigesprache |
+| Installation | nur das Plugin; keine eigenen Programme und keine Downloads im Standard |
+| Robustheit | Die Mod darf die Sitzung nie stören: Jeder Hook reicht an `next(e)` weiter, Fehler werden abgefangen |
+| Ressourcen | Animation sparsam: Im Terminal wird nur bei Änderungen neu gezeichnet (höchstens ca. 12 Bilder pro Sekunde), in der Desktop-App läuft die SVG-Animation im Rahmen der App |
+| Latenz | Schritt bis Anzeige unter 200 ms; Ansage beginnt unter 1 s nach dem Ereignis |
+| Datenschutz | Es verlässt nichts den Rechner, was Claude Code nicht ohnehin sendet; Ausnahme ist das Audio von `/voice` (Abschnitt 11) |
+| Plattform | Windows 11 (Windows Terminal und Code-Tab der Desktop-App). Andere Systeme laufen voraussichtlich mit, werden aber nicht getestet |
+| Sprachen | Deutsch und Englisch, abhängig von der Spracheinstellung von Claude Code (`language`) |
+| Barrierefreiheit | Alles Gesprochene steht auch als Text da; Grafiken haben Alternativtexte; Animationen lassen sich abschalten |
 
-### 3.3 Nicht-Ziele (vorerst)
+### 4.3 Nicht-Ziele
 
-- Kein Auslesen von claude.ai- oder Claude-Desktop-Chats auf inoffiziellen Wegen (Auslesen der Oberfläche, Screen-Scraping, interne Datenformate)
-- Keine eigene Anmeldung: Der Avatar fragt keine Claude-Zugangsdaten ab, speichert keine und leitet keine weiter
-- Kein API-Schlüssel-Modus (später als zusätzlicher Anbieter möglich)
-- Kein 3D, keine Versionen für macOS oder Linux
-- Keine Cloud-Synchronisation, keine Mobile-App, kein eigenes Hosting von Sprachmodellen
+- keine eigene App, kein Installer, kein frei schwebendes Desktop-Fenster
+- kein Auslesen normaler Claude-Desktop- oder claude.ai-Chats auf inoffiziellen Wegen
+- kein API-Schlüssel-Modus, keine kommerzielle Nutzung
+- kein 3D
 
-## 4. Architektur
-
-### 4.1 Überblick
+## 5. Architektur
 
 ```mermaid
 flowchart LR
-    subgraph Quellen
-        CC["Claude-Code-Sitzungen<br/>Terminal · IDE · Desktop-App"]
-        CD["Claude Desktop<br/>Chats · Cowork"]
-    end
-
-    subgraph App["Avatar-App (Electron, Windows)"]
+    subgraph CC["Claude-Code-Sitzung (Terminal oder Desktop-App)"]
         direction TB
-        LAPI["Lokale Avatar-API<br/>Hooks · MCP · 127.0.0.1"]
-        HUB["Aktivitäts-Hub<br/>Normalisieren · Sitzungen · Pläne"]
-        NAR["Erzähler<br/>Texte · Priorität · Drosselung"]
-        UI["Avatar · Sprechblase<br/>Sitzungsliste · Studio"]
-        VOICE["Sprach-Dienst<br/>STT · TTS · Hinweistöne"]
-        CHAT["Chat-Dienst<br/>Schnell-Chat · Übergaben · Aufgaben"]
-        TPL["Vorlagen-System<br/>Pakete · Profile"]
+        ENG["Claude Code<br/>Modell · Werkzeuge · /voice"]
+        subgraph MOD["Mod avatar"]
+            direction TB
+            EV["Ereignis-Adapter<br/>prompt.submit · tool.call · turn.*"]
+            ST["Zustand<br/>$.state · $.store"]
+            NAR["Erzähler<br/>Texte DE/EN · Priorität · Drosselung"]
+            VO["Sprache<br/>Befehle · Vorlesen"]
+            UI["Darstellung<br/>Seitenleiste · Band · Spinner"]
+        end
     end
+    SH[("Gemeinsamer Status-Ordner<br/>alle offenen Sitzungen")]
+    WIN["Windows<br/>Sprachausgabe · Töne · Benachrichtigungen"]
 
-    HL["Claude Code headless<br/>(dein Abo)"]
-
-    CC -->|"HTTP-Hooks (Plugin)"| LAPI
-    CD -->|"MCP (.mcpb)"| LAPI
-    LAPI --> HUB --> NAR
+    ENG -->|"Ereignisse"| EV
+    EV --> ST --> NAR
     NAR --> UI
-    NAR --> VOICE
-    CHAT -->|"eigene Schritte"| HUB
-    UI <--> CHAT
-    VOICE <--> CHAT
-    CHAT <-->|"stream-json"| HL
-    TPL --> UI
-    CHAT -.->|"Deep Link claude-cli://"| CC
+    NAR --> VO
+    VO -->|"$.prompt.submit · $.turn.abort"| ENG
+    VO -->|"$.audio.speak"| WIN
+    ST <-->|"$.fs"| SH
 ```
 
-**Grundprinzip:** Alle Quellen liefern Ereignisse an **eine** lokale Avatar-API. Der Aktivitäts-Hub übersetzt sie in ein gemeinsames Ereignismodell, und der Erzähler entscheidet, was als Text, Ton oder Sprache ausgegeben wird. Für eigene Chats startet der Avatar dein installiertes Claude Code als Hintergrundprozess; Anmeldung und Abrechnung bleiben vollständig bei Claude Code. Die Kernlogik (Hub, Erzähler, Zustandsautomaten, Vorlagen-Schema, Claude-Code-Steuerung) liegt in framework-unabhängigen TypeScript-Paketen.
+- **Ereignis-Adapter:** übersetzt die Ereignisse der Sitzung in ein kleines, eigenes Ereignismodell (Schritt gestartet, Plan aktualisiert, Freigabe nötig, Runde fertig …).
+- **Zustand:** Avatar-Zustand, Plan, Verlauf der letzten Schritte (`$.state`); Einstellungen und Profil dauerhaft (`$.store`).
+- **Erzähler:** entscheidet, was als Text, Ton oder Ansage ausgegeben wird, auf Deutsch oder Englisch.
+- **Sprache:** erkennt Befehle an den Avatar in gesprochenen Prompts, liest Antworten vor und verwaltet die Warteschlange der Ansagen.
+- **Darstellung:** zeichnet den Avatar je Oberfläche (SVG oder Pixel) und alle Anzeigen.
+- **Gemeinsamer Status-Ordner:** Jede Sitzung schreibt ihren Stand in eine kleine Datei. So kennt jede Instanz alle offenen Sitzungen, ohne Server.
 
-### 4.2 Komponenten
+Details zu Ereignissen, Sprache, Darstellung und mehreren Sitzungen stehen im [Mod-Konzept](mod-design.md).
 
-| Komponente | Aufgabe | Technik |
-|---|---|---|
-| Shell (Main-Prozess) | Fenster, Infobereich-Symbol, globale Tastenkürzel, Autostart, Updates, Windows-Integration | Electron, `globalShortcut`, electron-updater, `koffi` für einzelne Win32-Aufrufe |
-| Avatar-Renderer | Vorlage darstellen, Zustände, Lippen-Sync, Trefferfläche | React, Renderer-Adapter (SVG, Sprite, Rive), XState |
-| Sprechblase & Panels | Status, Antworten, Eingabe, Sitzungsliste | React, i18next |
-| Lokale Avatar-API | Hook-Ereignisse empfangen, MCP-Server per HTTP bereitstellen | Node `http` oder Fastify, nur `127.0.0.1` |
-| Aktivitäts-Hub | Ereignisse normalisieren und reduzieren, Sitzungen und Aufgabenlisten verwalten | Kernpaket `core` |
-| Erzähler | Ereignisse in kurze Texte, Töne und Ansagen übersetzen (Deutsch/Englisch); Priorität, Bündelung, Drosselung | Kernpaket `core`, i18n |
-| Chat-Dienst | Schnell-Chat, Verlauf, Übergaben, Hintergrund-Aufgaben | Paket `claude-code-client` (steuert `claude -p` über `stream-json`), SQLite |
-| Sprach-Dienst | Aufnahme, Sprachende-Erkennung, STT, TTS, Wiedergabe-Warteschlange, Barge-in | Web Audio, Silero VAD, whisper.cpp, Windows-Stimmen, Piper |
-| Vorlagen-System | Vorlagen laden und prüfen, Profile, Import/Export | Paket `avatar-format` (Zod, JSON Schema), DOMPurify |
-| Claude-Code-Plugin | Hook-Ereignisse an die Avatar-API senden | `plugins/avatar-bridge` (nur Konfiguration) |
-| MCP-Server | Avatar-Werkzeuge für den eigenen Chat (HTTP) und für Claude Desktop (stdio-Brücke als `.mcpb`); optional MCP-Proxy | `@modelcontextprotocol/sdk` |
-
-### 4.3 Fenster & Interaktion
-
-| Fenster | Eigenschaften |
-|---|---|
-| Avatar | transparent, rahmenlos, immer im Vordergrund, nicht in der Taskleiste, stiehlt keinen Fokus; außerhalb der Figur klick-durchlässig |
-| Sprechblase | folgt dem Avatar und richtet sich nach dem Bildschirmrand aus; zeigt Status, Antworten und Aktionsknöpfe |
-| Schnell-Chat | kleines, fokussierbares Eingabe-Panel am Avatar; Esc schließt es; per Tastenkürzel von überall erreichbar |
-| Sitzungen | Popover mit allen aktiven Sitzungen |
-| Studio & Einstellungen | normales Fenster, wird erst bei Bedarf geladen |
-
-- **Ziehen vs. Klicken:** Eine eigene Zieh-Logik ersetzt `-webkit-app-region: drag`, damit Klick, Doppelklick und Ziehen (ab ca. 4 px Bewegung) unterscheidbar bleiben.
-- **Klick-Durchlässigkeit:** `setIgnoreMouseEvents(true, { forward: true })` ist der Grundzustand. Sobald der Zeiger die Figur berührt, schaltet die App die Durchlässigkeit ab.
-- **Mehrere Monitore & Skalierung:** Positionen werden relativ zum jeweiligen Monitor gespeichert und bei Änderungen der Anzeige in den sichtbaren Bereich geklemmt. Unterschiedliche Windows-Skalierungen (z. B. 100 % und 150 %) werden berücksichtigt.
-- **Vollbild & Präsentationen:** Die Windows-Funktion `SHQueryUserNotificationState` meldet Vollbild-Apps, den Präsentationsmodus und Ruhezeiten. Der Avatar blendet sich dann aus oder bleibt stumm.
-- **Virtuelle Desktops:** Das Verhalten wird in Spike A geprüft. Notfalls holt ein Befehl im Infobereich-Menü den Avatar auf den aktuellen Desktop.
-- **Kontextmenü:** Profil/Vorlage, Nicht stören, Ausführlichkeit, Sprache, Sitzungen, Avatar-Studio, Einstellungen, Ausblenden, Beenden.
-
-### 4.4 Avatar-Zustände
+### 5.1 Avatar-Zustände
 
 ```mermaid
 stateDiagram-v2
     [*] --> idle
-    idle --> listening: Push-to-Talk
-    listening --> thinking: Aufnahme beendet
-    thinking --> speaking: Antwort kommt
+    idle --> thinking: Prompt gesendet
+    thinking --> working: Werkzeug läuft
+    working --> thinking: Werkzeug fertig
+    working --> attention: Freigabe nötig
+    attention --> working: entschieden
+    thinking --> speaking: Antwort wird vorgelesen
+    working --> success: Runde fertig
+    success --> speaking: Ergebnis ansagen
     speaking --> idle: fertig gesprochen
-    idle --> working: Sitzung arbeitet
-    working --> attention: Freigabe oder Eingabe nötig
-    attention --> working: beantwortet
-    working --> success: Aufgabe fertig
     working --> error: Fehler
-    success --> idle: nach kurzer Animation
     error --> idle: nach kurzer Animation
     idle --> sleeping: lange inaktiv
     sleeping --> idle: Aktivität
 ```
 
-- Gleichzeitig zutreffende Zustände werden priorisiert: `dragging` > `listening` > `speaking` > `attention` > `thinking` > `working` > `success`/`error` > `hover` > `sleeping` > `idle`.
-- Zusatzinformationen zeichnet die App unabhängig von der Vorlage als **Overlays**: Badge mit der Anzahl wartender Sitzungen, Fortschrittsring, Mikrofon-Symbol. So funktioniert jede Vorlage auch mit wenigen eigenen Zuständen.
-- Fehlt einer Vorlage ein Zustand, greift ihr Fallback (z. B. `working` → `thinking` → `idle`). Details stehen im [Vorlagenformat](avatar-templates.md), Abschnitt 6.
-
-### 4.5 Abläufe
-
-**Sprachfrage im Schnell-Chat**
+### 5.2 Ablauf: Auftrag per Stimme
 
 ```mermaid
 sequenceDiagram
     actor Du
-    participant A as Avatar
-    participant S as Sprach-Dienst
-    participant C as Chat-Dienst
-    participant K as Claude Code (headless, Abo)
-
-    Du->>A: Sprechtaste gedrückt halten
-    A->>S: Aufnahme starten (listening)
-    Du->>S: Frage sprechen
-    Du->>A: Taste loslassen
-    S->>S: lokal transkribieren (Deutsch oder Englisch)
-    S->>C: Transkript
-    C->>K: Nachricht als stream-json über stdin
-    Note over A: Zustand thinking
-    K-->>C: Text-Deltas (stream_event)
-    C->>A: Sprechblase füllt sich
-    C->>S: fertige Sätze
-    S->>A: Audio und Mundöffnung (speaking)
-    Du->>A: spricht dazwischen
-    A->>S: Ausgabe stoppen (Barge-in)
-```
-
-**Ein Schritt in einer Claude-Code-Sitzung**
-
-```mermaid
-sequenceDiagram
     participant CC as Claude Code
-    participant API as Avatar-API
-    participant H as Aktivitäts-Hub
-    participant N as Erzähler
-    participant A as Avatar
+    participant M as Mod
+    participant W as Windows-Sprachausgabe
 
-    CC->>API: HTTP-Hook PreToolUse (Bash, npm test)
-    API-->>CC: 204 sofort
-    API->>H: reduzieren und normalisieren
-    H->>N: step.started
-    N->>A: Statuszeile "Führt die Tests aus"
-    CC->>API: HTTP-Hook Notification (permission_prompt)
-    API-->>CC: 204 sofort
-    API->>H: attention.permission
-    H->>N: dringend
-    N->>A: Zustand attention, Hinweiston, Ansage
+    Du->>CC: Leertaste, Auftrag sprechen (/voice)
+    CC->>M: prompt.submit (Text)
+    M->>M: Befehl an den Avatar?
+    alt Befehl wie Status oder Stopp
+        M-->>CC: drop, Mod erledigt es selbst
+        M->>W: Antwort sprechen
+    else normaler Auftrag
+        M->>CC: weiter, mit Hinweis für eine vorlesbare Antwort
+        CC->>M: tool.call, turn.step (Schritte)
+        M->>M: Seitenleiste und Status aktualisieren
+        CC->>M: turn.complete
+        M->>W: kurzes Ergebnis sprechen
+    end
 ```
 
-## 5. Technologie-Entscheidungen
+## 6. Technologie
 
-| Thema | Vorschlag | Begründung | Alternativen |
-|---|---|---|---|
-| Desktop-Framework | **Electron** | Klick-Durchlässigkeit mit Ereignis-Weiterleitung eingebaut, eine Sprache für alles, ausgereifte Windows-Paketierung | Tauri 2 (kleiner; siehe unten) |
-| Sprache | TypeScript (strict) | ein Stack für App, Kernpakete, MCP-Server und Hilfsskripte | – |
-| UI | React + Vite (electron-vite) | großes Ökosystem, gute Werkzeuge | Svelte, Solid |
-| Zustandslogik | XState v5 | Avatar- und Sitzungszustände testbar und visualisierbar | eigener Reducer |
-| Claude | Claude Code CLI im Headless-Modus (`-p`, `stream-json` für Ein- und Ausgabe) | nutzt dein Abo über die offizielle Anmeldung; Streaming, Sitzungen, Modellwahl | später optional: Anthropic-SDK mit API-Schlüssel |
-| MCP | `@modelcontextprotocol/sdk`: HTTP-Server in der App, stdio-Brücke als `.mcpb` für Claude Desktop | ein Werkzeug-Satz für alle MCP-Clients | – |
-| Windows-Integration | `koffi` (FFI) für einzelne Win32-Aufrufe, `uiohook-napi` für die Sprechtaste | kein eigenes natives Modul nötig | eigenes N-API-Modul |
-| Internationalisierung | i18next | Deutsch und Englisch von Anfang an | FormatJS |
-| Persistenz | SQLite (`better-sqlite3`) für den Verlauf, JSON für Einstellungen | robust, lokal, leicht zu sichern | IndexedDB |
-| Schemas | Zod, daraus JSON Schema | eine Quelle für Typen und Validierung (Vorlagen, Ereignisse, IPC) | Ajv mit handgeschriebenen Schemas |
-| Avatar | SVG + CSS, Sprites; Rive optional | niedrige Einstiegshürde für Vorlagen, rein 2D | Lottie; Live2D (proprietäre SDK-Lizenz) |
-| Sprache ein/aus | whisper.cpp, Silero VAD, Windows-Stimmen, Piper | lokal, kostenlos, Deutsch und Englisch | Cloud-Anbieter (opt-in) |
-| Paketierung | electron-builder (NSIS-Installer pro Benutzer), GitHub Releases, electron-updater | etablierter Standard inkl. Auto-Update und Codesignatur | Electron Forge, MSIX |
-| Tests | Vitest; Playwright für Electron-E2E; aufgezeichnete Hook-Payloads und `stream-json`-Mitschnitte als Contract-Tests | – | – |
-| Monorepo | pnpm Workspaces | einfach, schnell | Nx, Turborepo |
-
-**Warum Electron und nicht Tauri 2?** Unter Windows nutzt Tauri ebenfalls eine Chromium-Engine (WebView2) und wäre deutlich kleiner (Installer wenige MB statt rund 100 MB). Für Electron sprechen trotzdem drei Punkte:
-
-1. Klick-Durchlässigkeit mit Weiterleitung von Mausereignissen ist eingebaut. Tauri kennt nur ein globales Ein/Aus, die Zeigerposition müsste man selbst abfragen.
-2. Eine Sprache für alles: App, Kernpakete, MCP-Server und die Steuerung von Claude Code sind TypeScript, ein Rust-Backend entfällt.
-3. Installer, Auto-Update und Codesignatur unter Windows sind mit electron-builder erprobt.
-
-Spike A misst RAM und CPU. Verfehlt Electron das RAM-Ziel deutlich, wird Tauri neu bewertet.
-
-## 6. Sprache – Ein- und Ausgabe
-
-**Eingabe:** Sprechtaste → Aufnahme (16 kHz mono, Echo-Unterdrückung) → Sprachende erkennen (Taste loslassen oder Silero VAD) → Spracherkennung → Text an den Chat. Zwischenergebnisse erscheinen live in der Sprechblase. Die Sprache (Deutsch oder Englisch) erkennt whisper.cpp automatisch; alternativ lässt sie sich fest einstellen.
-
-**Ausgabe:** Die gestreamte Antwort wird in Sätze zerlegt und satzweise synthetisiert, damit der Avatar schon nach dem ersten Satz zu sprechen beginnt. Die Lautstärke des Audiosignals steuert die Mundöffnung; dieser Lippen-Sync funktioniert mit jeder Stimme. Eine Warteschlange mit Prioritäten verhindert Überlappungen: Dringende Ansagen gehen vor, veraltete werden verworfen. Sobald du sprichst, verstummt der Avatar (Barge-in).
-
-| Baustein | Standard | Optional | Hinweise |
-|---|---|---|---|
-| Spracherkennung (STT) | whisper.cpp lokal als Sidecar-Prozess | Cloud-STT mit eigenem Schlüssel | Deutsch und Englisch in einem Modell. Modell-Download bei Bedarf (ca. 150 MB bis 1,6 GB). Mit Grafikkarte (Vulkan oder CUDA) deutlich schneller. |
-| Sprachausgabe (TTS) | Windows-Stimmen (Deutsch und Englisch, über Windows-Sprachpakete) | Piper lokal (z. B. „Thorsten" für Deutsch); Cloud-TTS (z. B. ElevenLabs, Azure) | Piper steht inzwischen unter GPL-3.0, deshalb nur als separater Prozess einbinden. Stimmen haben eigene Lizenzen. Azure liefert Viseme für genaueren Lippen-Sync. |
-| Sprachende (VAD) | Silero VAD | – | lokal, wenige MB |
-| Aktivierungswort | – | openWakeWord (lokal, opt-in) | Porcupine als kommerzielle Alternative |
-| Hinweistöne | Ton-Set der App | Töne aus der Vorlage | kurz (unter 1,5 s), Lautstärke getrennt von der Sprache einstellbar |
-
-**Sprechtaste:** Electrons `globalShortcut` meldet nur das Drücken einer Taste. Das Loslassen liefert unter Windows ein globaler Tastatur-Hook (`uiohook-napi`), ganz ohne Sonderrechte. Standard ist deshalb „gedrückt halten"; „umschalten" (drücken, sprechen, Ende per Sprachpause) bleibt wählbar. Einschränkung: Solange ein Fenster mit Administratorrechten im Vordergrund ist, erreicht die Taste den Avatar nicht.
-
-**Latenzbudget (Ziel, in Spike D messen):**
-
-| Schritt | Ziel |
-|---|---|
-| Sprachende erkennen | unter 0,3 s |
-| Spracherkennung (ca. 5 s Audio, lokal) | 0,3–1 s mit Grafikkarte, auf der CPU länger |
-| Claude bis zum ersten vollständigen Satz | ca. 1–2 s; der Chat-Prozess läuft dauerhaft, damit pro Frage kein Startaufwand entsteht |
-| Erste Sprachausgabe (lokal) | unter 0,3 s |
-| **Gesamt bis zum ersten Ton** | **unter 3 s** |
-
-**Sprechbare Antworten:** Im Sprachmodus bekommt Claude die Vorgabe, kurz (1–3 Sätze), ohne Markdown und in der Sprache der Frage zu antworten. Längere Inhalte und Code landen im Panel statt im Lautsprecher.
+| Thema | Entscheidung | Begründung |
+|---|---|---|
+| Form | Claude-Code-Plugin mit Hooks-Modul (Mod) | keine eigene App, kein Installer; Installation über `/plugin install` |
+| Sprache | TypeScript (TSX) | Die Mod-Schnittstelle ist TypeScript; Typen liefert Claude Code mit |
+| Code-Struktur | `hooks/register.tsx` plus eigene Module unter `src/`, statisch importiert | Mods können eigene Dateien importieren; dynamisches `import()` ist nicht erlaubt |
+| Abhängigkeiten | keine npm-Pakete zur Laufzeit; Kleinigkeiten selbst geschrieben | Mods haben weder DOM noch Node; was gebraucht wird, liefert `$` |
+| Zustand | `atom`, `read`, `update` mit Typvertrag in `types/index.d.ts` | Zeichnungen aktualisieren sich automatisch |
+| Grafik | `Svg` (Desktop-App, VS Code, Mobil), `Raster` mit Halbblock-Zeichen (Terminal) | Windows Terminal kann keine Bilder über das Kitty-Protokoll anzeigen; Halbblöcke mit True Color schon |
+| Sprachausgabe | `$.audio.speak`; Rückfall PowerShell mit `System.Speech` | Beides ist in Windows enthalten; nichts zu installieren |
+| Spracheingabe | `/voice` von Claude Code | eingebaut, Deutsch und Englisch, über das Abo, verbraucht keine Tokens |
+| KI-Hilfen | `$.model.fork` und `$.model.complete` mit `haiku` | über die Sitzung abgerechnet; nur auf Anfrage oder sparsam |
+| Tests | `claude plugin validate`, `claude plugin test` mit `*.test.ts` für Terminal und Desktop | offizielle Werkzeuge für Mods |
+| Entwicklung | `claude --plugin-dir <Ordner>` bzw. `CLAUDE_CODE_PLUGIN_DIRS` mit automatischem Neuladen | schnelle Schleife ohne Neuinstallation |
 
 ## 7. Datenschutz & Sicherheit
 
-- **Lokal zuerst:** Hook-Ereignisse, Spracherkennung, Sprachausgabe und Verlauf bleiben standardmäßig auf dem Rechner. Hinaus gehen nur deine Chat-Anfragen, die Claude Code über dein Abo an Anthropic sendet, sowie Cloud-STT/-TTS, falls du sie aktivierst. Die Einstellungen zeigen das offen an.
-- **Zugangsdaten:** Der Avatar liest, speichert und übermittelt keine Claude-Zugangsdaten. Die Anmeldung findet ausschließlich in Claude Code statt.
-- **Datensparsamkeit:** Hook-Payloads enthalten unter anderem Befehle, Dateiinhalte und Prompts. Der Aktivitäts-Hub reduziert sie sofort auf kurze Zusammenfassungsfelder (Werkzeug, Dateiname, gekürzter Befehl) und speichert keine Rohdaten.
-- **Lokale API:** nur `127.0.0.1`, Prüfung von `Host`- und `Origin`-Header (Schutz vor DNS-Rebinding und Browser-Anfragen), Größen- und Ratenlimits, Token für MCP und Steuerbefehle.
-- **Claude-Code-Prozesse:** Die App startet Claude Code direkt mit einer Argumentliste, ohne Umweg über eine Shell. Der Schnell-Chat läuft in einem eigenen Arbeitsverzeichnis ohne Projektzugriff. Hintergrund-Aufgaben starten nur in Ordnern, die du ausdrücklich ausgewählt hast, weil Claude Code im Headless-Modus keinen Vertrauensdialog zeigt.
-- **Electron-Härtung:** Context Isolation, Sandbox, kein Node in den Renderern, strikte Content Security Policy, validierte IPC-Nachrichten (Zod), keine Fremdinhalte.
-- **Vorlagen:** reine Daten ohne ausführbaren Code. SVG und CSS werden bereinigt, Pakete auf Größe, Dateitypen und Pfade geprüft. Persona-Texte aus fremden Vorlagen fließen erst nach Bestätigung in den System-Prompt (Schutz vor Prompt-Injection).
-- **Freigaben:** Werkzeug-Freigaben am Avatar sind opt-in, funktionieren nur per Klick (nie per Sprache) und zeigen immer den vollständigen Befehl.
-- **Mikrofon:** nur aktiv, solange die Sprechtaste läuft (sichtbares Symbol). Ein Aktivierungswort ist opt-in und wird ausschließlich lokal ausgewertet.
+- **Nichts Zusätzliches nach außen:** Die Mod sendet selbst nichts ins Internet. KI-Aufrufe der Mod (`$.model.*`) laufen über deine Sitzung und dein Abo, wie jeder Prompt.
+- **Spracheingabe:** `/voice` überträgt das Audio zur Umwandlung in Text an Anthropic. Die Mod weist bei der Einrichtung darauf hin. Eine lokale Alternative ist für später vorgesehen (F3.5).
+- **Sprachausgabe:** lokal über Windows.
+- **Gemeinsamer Status-Ordner:** enthält nur kurze, reduzierte Angaben (Projektname, Zustand, aktueller Schritt, Fortschritt), keine Dateiinhalte, Befehle im Wortlaut oder Prompts. Er liegt im Benutzerprofil, und veraltete Dateien werden aufgeräumt.
+- **Freigaben:** Die Mod entscheidet nie selbst über Werkzeug-Freigaben und nimmt sie nie per Sprache entgegen. Sie kündigt sie nur an.
+- **Prozesse:** PowerShell wird mit einer Argumentliste gestartet, ohne Shell-Zeichenkette; vorzulesender Text geht über stdin, nie in die Befehlszeile.
+- **Vorlagen:** reine Daten. SVG zeichnet Claude Code ohnehin in einem Sandbox-Rahmen ohne Skripte; die Mod prüft zusätzlich Größe und Inhalt.
 
 ## 8. Projektstruktur (Vorschlag)
 
+Das Repository ist zugleich die Mod und ihr Marketplace:
+
 ```text
 claude-desktop-avatar/
-├── apps/
-│   └── desktop/                # Electron-App (Windows)
-│       └── src/
-│           ├── main/           # Fenster, Infobereich, Hotkeys, Avatar-API, Dienste
-│           ├── preload/        # schmale, typisierte IPC-Brücke
-│           └── renderer/       # Avatar, Sprechblase, Panels, Studio (React)
-├── packages/
-│   ├── core/                   # Ereignismodell, Aktivitäts-Hub, Erzähler, Zustandsautomaten
-│   ├── claude-code-client/     # steuert Claude Code im Headless-Modus (stream-json)
-│   ├── avatar-format/          # Vorlagen-Schema, Loader, Validator-CLI
-│   ├── renderers/              # svg, sprite, rive
-│   ├── voice/                  # Schnittstellen und Adapter für STT/TTS
-│   ├── i18n/                   # Texte auf Deutsch und Englisch
-│   └── mcp-server/             # Avatar-Werkzeuge, stdio-Brücke (.mcpb), MCP-Proxy
-├── plugins/
-│   ├── avatar-bridge/          # Claude-Code-Plugin: Hooks → Avatar
-│   └── avatar-approvals/       # optional: Freigaben am Avatar
 ├── .claude-plugin/
-│   └── marketplace.json        # Plugin-Marketplace dieses Repos
-├── templates/                  # mitgelieferte Avatar-Vorlagen
-├── schemas/                    # veröffentlichte JSON-Schemas
-└── docs/                       # Plan, Konzepte, ADRs
+│   ├── plugin.json            # Manifest der Mod (Name, Version, userConfig, types)
+│   └── marketplace.json       # macht das Repo installierbar
+├── hooks/
+│   ├── hooks.json             # { "modules": ["./register.tsx"] }
+│   └── register.tsx           # Einstieg: registriert alle Hooks
+├── src/
+│   ├── events.ts              # Ereignis-Adapter
+│   ├── narrator.ts            # Texte DE/EN, Stufen, Drosselung
+│   ├── voice.ts               # Befehle, Vorlesen, Warteschlange, Windows-Rückfall
+│   ├── sessions.ts            # gemeinsamer Status-Ordner, Sprecher-Wahl
+│   ├── templates.ts           # Vorlagen laden und prüfen
+│   └── render/                # Seitenleiste, Band, Spinner, SVG- und Pixel-Avatar
+├── templates/                 # mitgelieferte Vorlagen
+├── sounds/                    # Hinweistöne (WAV)
+├── types/index.d.ts           # Typvertrag für $.state
+├── tests/                     # claude plugin test
+└── docs/                      # Plan und Konzepte
 ```
 
 ## 9. Roadmap
 
-Die Aufwände sind eine grobe Orientierung für eine Person in Vollzeit und hängen stark von den Spike-Ergebnissen ab.
+Die Aufwände sind eine grobe Orientierung für eine Person in Vollzeit.
 
-### Phase 0 – Fundament & Machbarkeit (ca. 2 Wochen)
+### Phase 0 – Machbarkeit (ca. 1 Woche)
 
-- Monorepo, Linting/Formatierung, CI auf Windows, leere Electron-App mit i18n-Gerüst (Deutsch/Englisch)
-- **Spike A – Fenster:** transparenter, verschiebbarer Always-on-top-Avatar mit Klick-Durchlässigkeit, mehrere Monitore mit unterschiedlicher Skalierung, Vollbild-Erkennung, virtuelle Desktops; RAM und CPU messen
-- **Spike B – Hooks:** HTTP-Hooks an einen lokalen Server; echte Payloads aller benötigten Ereignisse aufzeichnen (Aufgaben-Werkzeuge, Notification-Typen, `last_assistant_message`); prüfen, wie Claude Code reagiert, wenn der Avatar nicht läuft; Code-Tab von Claude Desktop sowie VS Code testen
-- **Spike C – Chat über das Abo:** Claude Code headless als dauerhaft laufender Prozess (`stream-json` in beide Richtungen), eigener System-Prompt, eingeschränkte Werkzeuge, Avatar-MCP über HTTP; Startzeit und Antwortlatenz messen; Isolation von deinen Hooks und Plugins prüfen; sicherstellen, dass das Abo und kein API-Schlüssel genutzt wird
-- **Spike D – Stimme:** Sprechtaste → whisper.cpp (Deutsch/Englisch) → Chat aus Spike C → Windows-Stimme bzw. Piper; Latenzen messen
-- ADRs zu Framework, Hook-Transport (HTTP oder Command), Chat-Prozessmodell und STT/TTS-Standard
+Ein Prototyp der Mod prüft unter Windows:
 
-**Fertig, wenn:** Messwerte vorliegen und die Entscheidungen dokumentiert sind. Trägt der Headless-Weg aus Spike C nicht, bleibt als Rückfall die sichtbare Übergabe an Claude Code im Terminal; die Antwort erscheint dann dort statt in der Sprechblase.
+- Seitenleiste mit animiertem SVG im Code-Tab der Desktop-App und Pixel-Avatar per `Raster` in Windows Terminal; Aufwand pro Bild
+- `$.audio.speak` unter Windows (Stimmen für Deutsch und Englisch, Warteschlange) und der PowerShell-Rückfall, einschließlich Abbrechen
+- Töne über `$.audio.play` in Terminal und Desktop-App, sonst über PowerShell
+- `/voice` im Zusammenspiel mit der Mod: Tap-Modus mit automatischem Senden, Erkennen von Befehlen wie „<Name>, Status" in `prompt.submit`
+- Welche Daten `tool.call`, `turn.step` und `turn.complete` liefern; wie „Freigabe nötig" erkennbar ist (`tool.check` oder Benachrichtigungs-Ereignis)
+- Gemeinsamer Status-Ordner mit zwei gleichzeitig offenen Sitzungen
 
-### Phase 1 – MVP „Sehen & Zeigen" (ca. 3–4 Wochen)
+**Fertig, wenn:** zu jedem Punkt ein Ergebnis und, wo nötig, eine Entscheidung dokumentiert ist.
 
-- Avatar-Fenster mit Ziehen, gemerkter Position, Infobereich-Symbol, Autostart, Nicht stören; Oberfläche auf Deutsch und Englisch
-- 2 SVG-Vorlagen mit Farb- und Teile-Auswahl (einfacher Studio-Dialog); Zustände `idle`, `thinking`, `working`, `attention`, `success`, `error`, `sleeping`
-- Claude-Code-Plugin `avatar-bridge` und Marketplace in diesem Repo; Aktivitäts-Hub, Erzähler (Text, Deutsch/Englisch), Sitzungsliste, Fortschritt aus der Aufgabenliste, Hinweistöne
-- Text-Schnell-Chat über Claude Code: Einrichtungsprüfung, dauerhafter Chat-Prozess, Streaming in Sprechblase und Panel, Verlauf, globales Tastenkürzel
-- Übergabe an Claude Code per Deep Link
+### Phase 1 – MVP „Sehen & Hören" (ca. 2–3 Wochen)
+
+- Seitenleiste mit Avatar (2 Vorlagen, Vektor und Pixel), Zuständen, aktuellem Schritt und Fortschritt; Band und Statuszeile
+- Erzähler auf Deutsch und Englisch mit Ausführlichkeitsstufen
+- Ansagen für „Freigabe nötig", „fertig" und „Fehler" mit Ton und Systembenachrichtigung
+- Befehl `/avatar` (öffnen, leise, Stufe, Sprache), Optionen bei der Installation, Einstellungen in `$.store`
+- Marketplace in diesem Repo, Tests für Terminal und Desktop
 
 **Fertig, wenn:**
 
-- eine Freigabe-Anfrage aus Claude Code in unter 1 s mit Projektname, Zustand `attention` und Ton am Avatar erscheint,
-- eine Textfrage über das Abo gestreamt beantwortet wird, ohne dass ein API-Schlüssel nötig ist,
-- die Avatar-Position Neustarts und Monitorwechsel übersteht,
-- Claude Code ohne laufenden Avatar normal weiterarbeitet.
+- die Mod mit einer Zeile installiert ist und in Terminal und Desktop-App erscheint,
+- ein Werkzeugschritt in unter 200 ms in der Seitenleiste steht,
+- eine Freigabe-Anfrage mit Animation, Ton und Ansage gemeldet wird,
+- Fehler der Mod die Sitzung nie stören.
 
-### Phase 2 – Stimme (ca. 2–3 Wochen)
+### Phase 2 – Jarvis-Sprachsteuerung (ca. 2 Wochen)
 
-- Sprechtaste (Halten, optional Umschalten), Sprachende-Erkennung, lokale Spracherkennung mit Modell-Assistent, Cloud-STT optional
-- Sprachausgabe mit Windows-Stimmen und Piper, satzweises Streaming, Barge-in, Lippen-Sync
-- Gesprochene Ansagen mit Ausführlichkeitsstufen und Ruhezeiten, beide Sprachen; Sprachmodus-Prompt
-- „Frag nach dem Stand" (aktive Sitzungen als Chat-Kontext)
+- Einrichtungshilfe für `/voice` (Modus, automatisches Senden, Sprache)
+- Befehle an den Avatar selbst: Status, Stopp, leiser/lauter, Zusammenfassung, Sitzungsüberblick
+- Vorlesen: Gesprochene Aufträge bekommen den Hinweis für einen vorlesbaren Einstieg; der Avatar liest ihn am Ende vor
+- „Was machst du gerade?" über `$.model.fork`; Begrüßung beim Start; Persona-Stile (knapp, freundlich, Butler)
 
-**Fertig, wenn:** eine gesprochene Frage auf Deutsch oder Englisch im Median nach unter 3 s eine gesprochene Antwort bekommt (Referenz-Hardware festlegen) und Ansagen Stufen und Ruhezeiten respektieren.
+**Fertig, wenn:** ein kompletter Auftrag per Stimme läuft, also sprechen, Schritte sehen und das Ergebnis hören, und „Stopp" die Runde zuverlässig abbricht.
 
-### Phase 3 – Claude Desktop & weitere Quellen (ca. 2–3 Wochen)
+### Phase 3 – Aussehen & Vorlagen (ca. 2 Wochen)
 
-- MCP-Server mit `avatar_status`, `avatar_say` und `avatar_notify`: per HTTP für den eigenen Chat, als stdio-Brücke im `.mcpb`-Format für Claude Desktop; Anleitung für die persönlichen Einstellungen in Claude Desktop; Test mit Cowork
-- Optionaler MCP-Proxy für vorhandene MCP-Server
-- Optionales Plugin `avatar-approvals`: Freigaben am Avatar beantworten (`PermissionRequest`-Hook)
-- Hintergrund-Aufgaben in Projekten über Claude Code headless, Freigaben in der Sprechblase, Abbruch
+- Vorlagenformat v1 (Vektor und Pixel), Anpassen in der Seitenleiste mit Live-Vorschau
+- Eigene Vorlagen im Benutzerordner, automatisches Neuladen, Prüfung mit verständlichen Fehlern
+- 3–5 Vorlagen, Anleitung für Vorlagen-Ersteller; optional das HUD als Hintergrund in der Desktop-App
 
-**Fertig, wenn:** ein Claude-Desktop-Chat und eine Cowork-Aufgabe über den MCP-Server Status und Ansagen am Avatar auslösen und sich eine Hintergrund-Aufgabe vollständig über den Avatar steuern lässt.
+**Fertig, wenn:** sich eine neue Vorlage ohne Änderung am Code der Mod erstellen, prüfen und nutzen lässt.
 
-### Phase 4 – Vorlagen & Avatar-Studio (ca. 2–3 Wochen)
+### Phase 4 – Mehrere Sitzungen & Feinschliff (ca. 2 Wochen)
 
-- Vorlagenformat v1 finalisieren (Schema, Doku), Validator-CLI, Import/Export `.avatarpack`
-- Avatar-Studio: Galerie, Parameter-Editor, Stimme und Persona, Zustands-Vorschau, Entwicklermodus mit Hot Reload
-- Sprite- und Rive-Renderer, 3–5 mitgelieferte Vorlagen, Anleitung für Vorlagen-Ersteller (Deutsch/Englisch)
+- Überblick über alle offenen Sitzungen in der Seitenleiste, Sprecher-Wahl (nur eine Instanz spricht)
+- Hinweise auf Nutzungslimits; Barrierefreiheit; README mit Installationszeile
+- Optional: lokale Spracherkennung (F3.5), Desktop-Erweiterung für normale Claude-Desktop-Chats (F4.7)
 
-**Fertig, wenn:** jemand ohne Änderung am App-Code eine neue Vorlage erstellen, validieren, importieren und teilen kann.
-
-### Phase 5 – Feinschliff & Veröffentlichung (ca. 2–3 Wochen)
-
-- Aktivierungswort (opt-in), Barrierefreiheit, optionale KI-Zusammenfassung im Erzähler (über Claude Code, verbraucht Abo-Kontingent)
-- Signierter Windows-Installer, Auto-Update über GitHub Releases, ggf. ARM64-Build
-- Dokumentations-Website, Vorlagen-Galerie
-
-**Fertig, wenn:** signierte Windows-Releases über GitHub Releases verfügbar sind.
+**Fertig, wenn:** mit drei offenen Sitzungen jede Meldung genau einmal angesagt wird und die Seitenleiste alle drei zeigt.
 
 ## 10. Risiken & Gegenmaßnahmen
 
 | Risiko | Auswirkung | Gegenmaßnahme |
 |---|---|---|
-| Nutzungsregeln für die Abo-Nutzung über ein von einer anderen App gesteuertes Claude Code | Die Chat-Funktion müsste umgebaut werden | Nur das unveränderte Claude Code mit deiner eigenen Anmeldung, keine Zugangsdaten im Avatar, nur persönliche Nutzung. Vor einer Veröffentlichung erneut prüfen. Rückfall: sichtbare Übergabe per Deep Link |
-| Claude Code ändert den Headless-Modus (laut Doku soll `--bare` Standard für `-p` werden, und der Bare-Modus nutzt kein Abo-Login) | Der Hintergrund-Chat funktioniert nicht mehr | Versionsprüfung beim Start, Tests gegen neue Claude-Code-Versionen, notfalls Rückfall auf die Deep-Link-Übergabe |
-| `ANTHROPIC_API_KEY` ist gesetzt | Abrechnung über die API statt über das Abo | Variable für den Chat-Prozess entfernen; die Einrichtung weist darauf hin |
-| Nutzungslimits des Abos | Chat und Aufgaben pausieren | schlanker System-Prompt, keine unnötigen Werkzeuge, verständliche Meldung beim Limit |
-| Die Hook-Schnittstelle von Claude Code ändert sich (schnelle Releases) | Ereignisse fehlen oder werden falsch gedeutet | Adapter-Schicht, tolerante Parser, Contract-Tests mit aufgezeichneten Payloads, Mindestversion prüfen |
-| HTTP-Hooks sind in Firmenumgebungen gesperrt (`allowedHttpHookUrls`) | keine Live-Schritte | Fallback über asynchrone Command-Hooks mit kleinem Weiterleiter; Anleitung für Admins |
-| Synchrone Hooks bremsen Claude Code | spürbare Verzögerung | sofortige Antwort der API (unter 10 ms), Verarbeitung danach, kurzer `timeout` |
-| Keine offizielle Schnittstelle zu Desktop-Chats und Cowork; Plugin-Hooks feuern in Cowork laut einem Fehlerbericht nicht | F4 dort nur teilweise | MCP-Server und optionaler MCP-Proxy, Erwartung klar kommunizieren, kein Scraping |
-| Hook-Payloads enthalten Code, Befehle und eventuell Geheimnisse | Datenabfluss | sofortige Reduktion, keine Rohdaten-Speicherung, Cloud-Funktionen opt-in |
-| Ansagen nerven oder stören | Nutzer schalten den Avatar ab | zurückhaltende Standards, Bündelung, Ruhezeiten, Stummschalten pro Sitzung |
-| Speicherbedarf von Electron | geringere Akzeptanz | in Phase 0 messen, Fenster erst bei Bedarf laden, Animationen drosseln, Tauri als Option offenhalten |
-| Unsignierter Installer | SmartScreen-Warnung, Vertrauensverlust | Codesignatur ab der ersten öffentlichen Version |
-| Lizenzen (Piper GPL-3.0, Stimmen, Modelle, Rive-Editor) | Probleme bei der Verteilung | Sidecar-Prozesse, Lizenzprüfung je Komponente, Modelle und Stimmen als separater Download |
-| Markenrecht „Claude" (Name, Logo) | Umbenennung kurz vor dem Release | Arbeitstitel bleibt vorerst; Markenrichtlinien von Anthropic vor einer Veröffentlichung prüfen, kein Claude-Logo als Avatar, Hinweis „inoffiziell" |
-| Vorlagen als Angriffsvektor (SVG-Skripte, Prompt-Injection über Persona-Texte) | Sicherheitslücke | reine Daten, Bereinigung, CSP, Persona-Texte erst nach Bestätigung |
-| Echo: Die Sprachausgabe landet im Mikrofon | Fehlerkennung | Echo-Unterdrückung, Sprechtaste statt Dauerlauschen, Ausgabe beim Zuhören stoppen |
+| Die Mod-Schnittstelle ist jung und ändert sich | Teile brechen nach Updates | Mindestversion von Claude Code festlegen, Tests mit `claude plugin test`, Änderungen verfolgen |
+| `$.audio.speak` funktioniert unter Windows nicht oder ohne Wahl der Stimme | keine oder falsche Ansagen | Rückfall auf `System.Speech` über PowerShell (in Phase 0 prüfen) |
+| `$.audio.play` ist im Windows-Terminal stumm | keine Hinweistöne | Windows-Player über PowerShell; in der Desktop-App prüfen |
+| `/voice` schickt das Audio an Anthropic | widerspricht „Sprache lokal" | Entscheidung bei dir (Abschnitt 11); später optional lokale Erkennung |
+| `/voice` braucht die Anmeldung mit dem Claude-Konto; ein gesetzter `ANTHROPIC_API_KEY` schaltet es ab | keine Spracheingabe | Hinweis in der Einrichtung |
+| Seitenleiste braucht Platz im Terminal | Avatar nur im Band sichtbar | Hinweis auf Vollbild-Modus und breites Fenster; Band und Statuszeile funktionieren immer |
+| Mehrere Sitzungen sprechen gleichzeitig | doppelte Ansagen | Sprecher-Wahl über eine Lock-Datei mit Herzschlag |
+| Ansagen nerven | Mod wird abgeschaltet | zurückhaltende Standards, Bündelung, Ruhezeiten, `/avatar leise` |
+| Fehler in der Mod | gestörte Sitzung | jeder Hook mit Fehlerbehandlung und `next(e)`; Tests für beide Oberflächen |
+| Organisationsrichtlinien können Mods oder `/voice` sperren | Funktion fehlt | klar melden statt still zu scheitern |
+| Name „Jarvis" ist eine Marke von Marvel | Ärger bei öffentlicher Verbreitung | Standardname neutral, Umbenennen in den Einstellungen; „Jarvis" nur als persönliche Wahl |
 
-## 11. Entscheidungen
+## 11. Entscheidungen & offene Fragen
+
+**Entschieden:**
 
 | # | Frage | Entscheidung | Folgen im Plan |
 |---|---|---|---|
-| 1 | Plattformen | Windows | Windows 11 ist die einzige Zielplattform. Themen zu macOS und Linux entfallen, der Kern bleibt portabel. |
-| 2 | Welche Chats? | alle | Übersicht über alle Chat-Arten in der [Claude-Anbindung](claude-integration.md), Abschnitt 1. Der MCP-Server für Claude Desktop wird „Soll" und rückt in Phase 3, dazu ein optionaler MCP-Proxy; Cowork läuft ebenfalls über MCP. |
-| 3 | Bezahlung der Avatar-Chats | vorerst nur über das Abo | Der Chat läuft über dein lokales Claude Code (Headless-Modus) und die Deep-Link-Übergabe; kein API-Schlüssel, kein Agent SDK. Ein API-Modus bleibt als spätere Option. Details in der [Claude-Anbindung](claude-integration.md), Abschnitt 11. |
-| 4 | Sprache lokal oder Cloud? | lokal, Cloud optional | wie geplant |
-| 5 | 2D oder 3D? | nur 2D | SVG, Sprites und Rive; VRM entfällt |
-| 6 | Name | vorerst so lassen | Der Arbeitstitel bleibt; Markenprüfung vor einer Veröffentlichung |
-| 7 | Lizenz | was am meisten Sinn macht | **MIT** für den Code: einfach, im TypeScript- und Electron-Umfeld üblich und mit allen geplanten Abhängigkeiten vereinbar (Piper läuft als separater Prozess). Mitgelieferte Vorlagen-Grafiken und Töne stehen unter CC BY 4.0; die Lizenz steht jeweils im Manifest. |
-| 8 | Sprachen | Deutsch und Englisch | beide ab Phase 1; Standard ist die Windows-Anzeigesprache |
+| 1 | Plattform | Windows | Windows 11, im Terminal und im Code-Tab der Desktop-App |
+| 2 | Welche Chats? | alle | alle Claude-Code-Sitzungen (jede mit eigener Mod-Instanz und gemeinsamem Überblick). Normale Desktop-Chats, Cowork und claude.ai erreichen Mods nicht; für Desktop-Chats ist eine kleine Erweiterung als spätere Option vorgesehen (F4.7) |
+| 3 | Bezahlung | vorerst nur über das Abo | erfüllt: Die Mod ist Teil deiner Sitzung, alles läuft über dein Abo |
+| 4 | Sprache lokal oder Cloud? | lokal, Cloud optional | Sprachausgabe lokal; Spracheingabe siehe offene Frage A |
+| 5 | 2D oder 3D? | nur 2D | Vektor (SVG) und Pixel |
+| 6 | Name | vorerst so lassen | Arbeitstitel bleibt; die Mod heißt `avatar`, der Name des Assistenten ist frei wählbar |
+| 7 | Lizenz | MIT | `LICENSE` liegt im Repo |
+| 8 | Sprachen | Deutsch und Englisch | beide von Anfang an |
+| 9 | Auslieferung | Mod für Claude Code, kein Installer, nicht kommerziell | dieser Plan v0.3 |
 
-**Neue offene Frage:** Bleibt der Avatar ein persönliches Werkzeug, oder soll er öffentlich erscheinen? Davon hängt ab, wie genau die Bedingungen für das Ansteuern von Claude Code in einem Produkt geprüft werden müssen und ob Codesignatur und Vorlagen-Galerie früh nötig sind. Bis zur Klärung geht der Plan von persönlicher Nutzung aus.
+**Offene Fragen:**
+
+- **A – Spracheingabe:** Ist `/voice` in Ordnung, obwohl das Audio bei Anthropic in Text umgewandelt wird? Empfehlung: ja, denn der Text geht als Prompt ohnehin an Anthropic, und es ist nichts zu installieren. Die Alternative wäre eine lokale Erkennung mit einem zusätzlichen Programm oder mit der älteren, eingebauten Windows-Spracherkennung, die erst noch geprüft werden müsste.
+- **B – Hauptoberfläche:** Nutzt du Claude Code vor allem im Terminal oder im Code-Tab der Desktop-App? Davon hängt ab, welche Darstellung zuerst ausgebaut wird: Pixel-Art im Terminal oder die animierte Vektorgrafik in der App.
 
 ## 12. Nächste Schritte
 
-1. Phase 0 starten: Repo-Gerüst und die Spikes A–D auf Windows.
-2. Die neue offene Frage klären (persönlich oder öffentlich).
-3. Spike-Ergebnisse und Entscheidungen als ADRs unter `docs/adr/` festhalten.
+1. Offene Fragen A und B klären.
+2. Phase 0: Prototyp der Mod schreiben und unter Windows ausprobieren.
+3. Ergebnisse als ADRs unter `docs/adr/` festhalten.
 4. Pro Phase einen GitHub-Meilenstein mit Issues anlegen.

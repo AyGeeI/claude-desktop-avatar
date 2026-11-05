@@ -1,29 +1,35 @@
 # Claude Desktop Avatar
 
-Ein anpassbarer Desktop-Begleiter für Claude unter Windows. Er sitzt frei verschiebbar auf deinem Bildschirm, startet per Klick, Tastenkürzel oder Stimme einen Chat und erzählt dir mit Sprechblase und Ton, woran deine Claude-Sitzungen gerade arbeiten.
+Ein Jarvis-artiger Assistent als **Mod für Claude Code**. Er lebt in deiner offenen Claude-Code-Sitzung, hört auf Sprachbefehle, zeigt als animierter Avatar, woran Claude gerade arbeitet, und sagt dir Bescheid, wenn Claude dich braucht.
 
 > **Status: Planung.** Es gibt noch keinen lauffähigen Code. Der Plan liegt unter [`docs/`](docs/).
 
 ## Kernideen
 
-- **Immer da, nie im Weg:** Der Avatar schwebt über allen Fenstern, lässt sich mit der Maus verschieben und lässt Klicks neben sich durch.
-- **Dein Avatar, dein Stil:** 2D-Vorlagen mit anpassbaren Farben, Teilen, Größe, Stimme, Name und Persönlichkeit. Eigene Vorlagen lassen sich ohne Programmierung bauen und teilen.
-- **Schnell gefragt, über dein Abo:** Ein Klick, ein Tastenkürzel oder die Sprechtaste genügt. Die Antwort kommt über dein installiertes Claude Code und dein Claude-Abo; ein API-Schlüssel ist nicht nötig.
-- **Live dabei:** Claude-Code-Sitzungen melden ihre Schritte, ihren Fortschritt und wann sie dich brauchen. Chats und Cowork-Aufgaben in Claude Desktop melden sich über einen MCP-Server, soweit Claude das tut. Der Avatar zeigt das an, spielt Hinweistöne und spricht Wichtiges aus.
-- **Zweisprachig:** Oberfläche, Ansagen und Sprachsteuerung auf Deutsch und Englisch.
+- **Keine eigene App, kein Installer:** eine Erweiterung für Claude Code, aktiv, solange Claude Code geöffnet ist.
+- **Sprechen statt tippen:** Aufträge über die eingebaute Spracheingabe von Claude Code (`/voice`). Befehle wie „Jarvis, Status" oder „Jarvis, stopp" erledigt der Avatar selbst.
+- **Hören, was passiert:** Ansagen und kurze Antworten über die Sprachausgabe von Windows.
+- **Sehen, was passiert:** ein Avatar in einer Seitenleiste neben dem Chat, als animierte Vektorgrafik in der Desktop-App und als Pixel-Art im Terminal. Dazu Fortschritt, „Freigabe nötig" und ein Überblick über alle offenen Sitzungen.
+- **Dein Stil:** Vorlagen mit anpassbaren Farben, Teilen, Name, Stimme und Persönlichkeit.
+- **Über dein Abo:** Alles läuft in deiner Sitzung, ohne API-Schlüssel. Deutsch und Englisch.
 
-## Voraussetzungen (geplant)
+## Installation (geplant)
 
-- Windows 11
-- ein Claude-Abo und ein installiertes, angemeldetes [Claude Code](https://code.claude.com/docs)
+In einer Claude-Code-Sitzung im Terminal:
+
+```text
+/plugin install avatar --marketplace AyGeeI/claude-desktop-avatar
+```
+
+In der Desktop-App: „+" neben der Eingabe → Plugins → Add marketplace mit `AyGeeI/claude-desktop-avatar` → Add plugin.
 
 ## Dokumentation
 
 | Dokument | Inhalt |
 |---|---|
-| [Projektplan](docs/PLAN.md) | Vision, Anforderungen, Architektur, Technologie, Roadmap, Risiken, Entscheidungen |
-| [Avatar-Vorlagen](docs/avatar-templates.md) | Vorlagenformat, Parameter, Zustände, Renderer, Avatar-Studio, Sicherheit |
-| [Anbindung an Claude](docs/claude-integration.md) | Abdeckung aller Chat-Arten, Claude-Code-Plugin (Hooks), Ereignismodell, Erzähler, Schnell-Chat über das Abo, MCP, Deep Links, Nutzungsregeln |
+| [Projektplan](docs/PLAN.md) | Vision, Möglichkeiten und Grenzen einer Mod, Anforderungen, Architektur, Roadmap, Risiken, Entscheidungen |
+| [Mod-Konzept](docs/mod-design.md) | Ereignisse, Erzähler, Spracheingabe und -ausgabe, Darstellung je Oberfläche, mehrere Sitzungen, Befehle, Installation |
+| [Avatar-Vorlagen](docs/avatar-templates.md) | Vorlagenformat (SVG und Pixel), Parameter, Zustände, Persona, Anpassen, Prüfung |
 
 ## Lizenz
 
@@ -31,4 +37,4 @@ Der Code steht unter der [MIT-Lizenz](LICENSE). Mitgelieferte Avatar-Vorlagen (G
 
 ## Hinweis
 
-Unabhängiges Projekt, nicht mit Anthropic verbunden. „Claude" ist eine Marke von Anthropic.
+Nicht kommerzielles, unabhängiges Projekt, nicht mit Anthropic verbunden. „Claude" ist eine Marke von Anthropic. „Jarvis" dient hier nur als Vergleich und Beispielname.
