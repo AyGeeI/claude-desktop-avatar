@@ -1,0 +1,81 @@
+{
+  "name": "avatar",
+  "version": "0.1.0",
+  "description": "Desktop-Avatar für Claude Code: eine animierte Figur auf dem Windows-Desktop, die Schritte ansagt, auf Befehle hört und Bescheid sagt, wenn Claude dich braucht.",
+  "author": { "name": "AyGeeI" },
+  "homepage": "https://github.com/AyGeeI/claude-desktop-avatar",
+  "repository": "https://github.com/AyGeeI/claude-desktop-avatar",
+  "license": "MIT",
+  "keywords": ["avatar", "voice", "desktop", "companion", "windows"],
+  "types": "./types/index.d.ts",
+  "userConfig": {
+    "name": {
+      "type": "string",
+      "title": "Name des Assistenten",
+      "description": "Name, auf den der Avatar hört, z. B. „Vela, Status“.",
+      "default": "Vela"
+    },
+    "language": {
+      "type": "string",
+      "title": "Sprache",
+      "description": "Sprache für Texte und Ansagen: automatisch, Deutsch oder Englisch.",
+      "default": "auto",
+      "options": ["auto", "de", "en"]
+    },
+    "verbosity": {
+      "type": "string",
+      "title": "Ausführlichkeit",
+      "description": "quiet: nur Dringendes · normal: Dringendes und Fertig · chatty: auch Zwischenschritte.",
+      "default": "normal",
+      "options": ["quiet", "normal", "chatty"]
+    },
+    "speech": {
+      "type": "boolean",
+      "title": "Sprachausgabe",
+      "description": "Ansagen über die Windows-Sprachausgabe.",
+      "default": true
+    },
+    "voiceMode": {
+      "type": "boolean",
+      "title": "Sprachmodus",
+      "description": "Antworten vorlesen und Claude um einen kurzen, vorlesbaren Einstieg bitten.",
+      "default": false
+    },
+    "desktop": {
+      "type": "boolean",
+      "title": "Desktop-Avatar",
+      "description": "Den Avatar als Fenster auf dem Windows-Desktop zeigen.",
+      "default": true
+    },
+    "voiceDe": {
+      "type": "string",
+      "title": "Stimme Deutsch",
+      "description": "Name einer installierten Windows-Stimme, z. B. „Microsoft Hedda Desktop“. Leer: automatisch.",
+      "default": ""
+    },
+    "voiceEn": {
+      "type": "string",
+      "title": "Stimme Englisch",
+      "description": "Name einer installierten Windows-Stimme, z. B. „Microsoft Zira Desktop“. Leer: automatisch.",
+      "default": ""
+    },
+    "quietHours": {
+      "type": "string",
+      "title": "Ruhezeiten",
+      "description": "Stunden ohne Sprachausgabe, z. B. „22-7“. Leer: keine.",
+      "default": ""
+    },
+    "hotkey": {
+      "type": "string",
+      "title": "Tastenkürzel",
+      "description": "Globales Tastenkürzel, das das Eingabefeld am Desktop-Avatar öffnet.",
+      "default": "Ctrl+Alt+Space"
+    },
+    "notifications": {
+      "type": "boolean",
+      "title": "Systembenachrichtigungen",
+      "description": "Windows-Benachrichtigung, wenn Claude eine Freigabe braucht oder nach längerer Arbeit fertig ist.",
+      "default": true
+    }
+  }
+}

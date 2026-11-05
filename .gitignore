@@ -1,0 +1,6 @@
+# Von Claude Code erzeugte Typen fürs Editor-Tooling
+.claude-plugin/types/
+node_modules/
+*.log
+# Zwischenstand des Desktop-Begleiters (wird beim Start neu gebaut)
+companion/bin/

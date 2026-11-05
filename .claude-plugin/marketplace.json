@@ -1,0 +1,11 @@
+{
+  "name": "claude-desktop-avatar",
+  "owner": { "name": "AyGeeI" },
+  "plugins": [
+    {
+      "name": "avatar",
+      "source": "./",
+      "description": "Desktop-Avatar für Claude Code: animierte Figur, Ansagen, Sprachbefehle, Überblick über alle Sitzungen."
+    }
+  ]
+}
