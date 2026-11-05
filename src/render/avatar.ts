@@ -5,23 +5,30 @@ import type { AvatarMood } from '../../types'
 import type { Controller } from '../controller'
 import { PANE_ID } from '../controller'
 import type { Timer } from '../io'
-import { composeFrame, fpsOf, framesOf, glitch, injectSvg, overlayFrames, paletteColors, pixelSvg, rasterCells, stateFor } from '../templates'
+import { composeFrame, fpsOf, framesOf, glitch, injectSvg, overlayFrames, paletteColors, pixelSvg, rasterCells, stateFor, svgDimensions } from '../templates'
 
-const svgCache = new Map<string, string>()
+export type AvatarSvg = { svg: string; width: number; height: number }
 
-export function avatarSvg(controller: Controller, mood: AvatarMood, size: number): string | undefined {
+const svgCacheSized = new Map<string, AvatarSvg>()
+
+export function avatarSvg(controller: Controller, mood: AvatarMood, size: number): AvatarSvg | undefined {
   const template = controller.template
   if (!template) return undefined
   const params = controller.params
-  const key = JSON.stringify([template.manifest.id, template.manifest.version, mood, params, size])
-  const cached = svgCache.get(key)
+  const key = JSON.stringify([template.manifest.id, template.manifest.version, template.dir, mood, params, size])
+  const cached = svgCacheSized.get(key)
   if (cached) return cached
-  const svg = template.svgSource
-    ? injectSvg(template.svgSource, template.manifest, params, stateFor(template, mood), true)
-    : pixelSvg(template, params, mood, { size, motion: true })
-  if (svgCache.size > 40) svgCache.clear()
-  svgCache.set(key, svg)
-  return svg
+  let result: AvatarSvg
+  if (template.svgSource) {
+    const width = template.manifest.svg?.width ?? size
+    const height = template.manifest.svg?.height ?? size
+    result = { svg: injectSvg(template.svgSource, template.manifest, params, stateFor(template, mood), true), width, height }
+  } else {
+    result = { svg: pixelSvg(template, params, mood, { size, motion: true }), ...svgDimensions(template, size) }
+  }
+  if (svgCacheSized.size > 40) svgCacheSized.clear()
+  svgCacheSized.set(key, result)
+  return result
 }
 
 export function rasterFrame(controller: Controller, mood: AvatarMood, frameIndex: number): { cells: string; columns: number; rows: number } | undefined {

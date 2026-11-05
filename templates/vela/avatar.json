@@ -1,0 +1,96 @@
+{
+  "formatVersion": 1,
+  "id": "cda.vela",
+  "version": "1.0.0",
+  "name": { "de": "Vela", "en": "Vela" },
+  "description": {
+    "de": "Holografische Netz-KI im Neon-Stil: asymmetrischer Bob mit Farbsträhne, leuchtende Augen, Projektionsring.",
+    "en": "A holographic net AI in neon style: asymmetric bob with a colour streak, glowing eyes, projection ring."
+  },
+  "author": "AyGeeI",
+  "license": "CC-BY-4.0",
+  "parameters": {
+    "hair": {
+      "type": "color",
+      "label": { "de": "Haar", "en": "Hair" },
+      "default": "#2e1f66",
+      "palette": ["#2e1f66", "#14121f", "#6b1f52", "#0f4c5c", "#c8c6d8", "#5a2e1a", "#1f3d8a"]
+    },
+    "streak": {
+      "type": "color",
+      "label": { "de": "Strähne", "en": "Streak" },
+      "default": "#ff2bd6",
+      "palette": ["#ff2bd6", "#00e5ff", "#f9f871", "#7cff6b", "#ff7a1a", "#ffffff"]
+    },
+    "skin": {
+      "type": "color",
+      "label": { "de": "Haut", "en": "Skin" },
+      "default": "#cdeef7",
+      "palette": ["#cdeef7", "#e6dcff", "#f2d3c0", "#d9a27e", "#a8683f", "#6b3e26"]
+    },
+    "eyes": {
+      "type": "color",
+      "label": { "de": "Augen", "en": "Eyes" },
+      "default": "#ff3df0",
+      "palette": ["#ff3df0", "#00e5ff", "#ffb000", "#7cff6b", "#ff3b5c", "#9b7bff"]
+    },
+    "accent": {
+      "type": "color",
+      "label": { "de": "Akzent (Lippen, Tattoo)", "en": "Accent (lips, tattoo)" },
+      "default": "#ff2bd6",
+      "palette": ["#ff2bd6", "#ff3b5c", "#9b7bff", "#00e5ff", "#ffb000"]
+    },
+    "jacket": {
+      "type": "color",
+      "label": { "de": "Jacke", "en": "Jacket" },
+      "default": "#2d2a5c",
+      "palette": ["#2d2a5c", "#1b1b22", "#5c1f3d", "#1f4a4a", "#d8d8e8", "#3b2a14"]
+    },
+    "glow": {
+      "type": "color",
+      "label": { "de": "Leuchten", "en": "Glow" },
+      "default": "#00e5ff",
+      "palette": ["#00e5ff", "#ff2bd6", "#7cff6b", "#ffb000", "#9b7bff", "#ffffff"]
+    },
+    "visor": {
+      "type": "choice",
+      "label": { "de": "Visier", "en": "Visor" },
+      "default": "none",
+      "options": [
+        { "id": "none", "label": { "de": "keins", "en": "none" } },
+        { "id": "band", "label": { "de": "Band", "en": "band" } },
+        { "id": "half", "label": { "de": "halb", "en": "half" } }
+      ]
+    },
+    "earring": {
+      "type": "toggle",
+      "label": { "de": "Ohrring", "en": "Earring" },
+      "default": true
+    },
+    "tattoo": {
+      "type": "toggle",
+      "label": { "de": "Schaltkreis-Tattoo", "en": "Circuit tattoo" },
+      "default": true
+    }
+  },
+  "states": {
+    "idle": {},
+    "thinking": { "fallback": "idle" },
+    "working": { "fallback": "thinking" },
+    "speaking": { "fallback": "idle" },
+    "attention": { "fallback": "idle" },
+    "success": { "once": true, "duration": 1800, "fallback": "idle" },
+    "error": { "once": true, "duration": 1600, "fallback": "idle" },
+    "sleeping": { "fallback": "idle" }
+  },
+  "pixel": { "file": "pixel.json" },
+  "voice": { "de": "Microsoft Katja", "en": "Microsoft Zira" },
+  "persona": {
+    "displayName": { "de": "Vela", "en": "Vela" },
+    "greeting": {
+      "de": "Vela online. Ich behalte deine Sitzungen im Blick.",
+      "en": "Vela online. I'm keeping an eye on your sessions."
+    },
+    "style": "neon"
+  }
+}

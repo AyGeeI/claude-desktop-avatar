@@ -7,7 +7,8 @@ import type { Lang } from './i18n'
 import type { Io } from './io'
 import { base64, clamp, isRecord, joinPath, safeJson } from './util'
 
-export type PaletteEntry = string | { param: string; shade?: number }
+/** Feste Farbe (`#RRGGBB`, `#RRGGBBAA`, `transparent`) oder Farbe eines Parameters, optional auf-/abgedunkelt und durchscheinend. */
+export type PaletteEntry = string | { param: string; shade?: number; alpha?: number }
 
 export type PixelStateSpec = { frames: string[]; fps?: number }
 
@@ -215,7 +216,10 @@ export function entryColor(entry: PaletteEntry, params: Record<string, string | 
   if (typeof entry === 'string') return parseColor(entry)
   const value = params[entry.param]
   const base = parseColor(typeof value === 'string' ? value : '#ffffff')
-  return entry.shade ? shadeColor(base, entry.shade) : base
+  const shaded = entry.shade ? shadeColor(base, entry.shade) : base
+  if (entry.alpha === undefined) return shaded
+  const alpha = Math.round(clamp(entry.alpha, 0, 1) * 255)
+  return ((alpha << 24) | (shaded & 0xffffff)) >>> 0
 }
 
 export function colorHex(argb: number): string {
@@ -255,7 +259,19 @@ export function overlayFrames(template: LoadedTemplate, params: Record<string, s
   return out
 }
 
-/** Setzt einen Frame samt Overlays zu ARGB-Pixeln zusammen (Zeile für Zeile). */
+/** Mischt eine Farbe über eine andere (Alpha „über“, nicht vormultipliziert). */
+export function over(src: number, dst: number): number {
+  const sa = src >>> 24
+  if (sa === 255 || dst >>> 24 === 0) return src >>> 0
+  const a = sa / 255
+  const da = (dst >>> 24) / 255
+  const oa = a + da * (1 - a)
+  if (oa <= 0) return 0
+  const mix = (shift: number) => Math.round((((src >>> shift) & 255) * a + ((dst >>> shift) & 255) * da * (1 - a)) / oa)
+  return ((Math.round(oa * 255) << 24) | (mix(16) << 16) | (mix(8) << 8) | mix(0)) >>> 0
+}
+
+/** Setzt einen Frame samt Overlays zu ARGB-Pixeln zusammen (Zeile für Zeile, durchscheinende Pixel gemischt). */
 export function composeFrame(template: LoadedTemplate, colors: Map<string, number>, frames: readonly string[]): Uint32Array {
   const { width, height } = template.pixel
   const out = new Uint32Array(width * height)
@@ -267,7 +283,8 @@ export function composeFrame(template: LoadedTemplate, colors: Map<string, numbe
       for (let x = 0; x < width; x++) {
         const color = colors.get(chars[x] ?? '.') ?? 0
         if ((color >>> 24) === 0) continue
-        out[y * width + x] = color
+        const i = y * width + x
+        out[i] = over(color, out[i] ?? 0)
       }
     }
   }
@@ -367,6 +384,17 @@ function framePaths(pixels: Uint32Array, width: number, height: number): string 
   return out
 }
 
+/** Bildschirmpixel je Vorlagenpixel für eine gewünschte Größe (mindestens 1, ganzzahlig). */
+export function svgPixelSize(template: LoadedTemplate, size: number): number {
+  return Math.max(1, Math.floor(size / Math.max(template.pixel.width, template.pixel.height)))
+}
+
+/** Breite und Höhe der SVG aus pixelSvg (mit dem Rand von 2 Pixeln). */
+export function svgDimensions(template: LoadedTemplate, size: number): { width: number; height: number } {
+  const px = svgPixelSize(template, size)
+  return { width: (template.pixel.width + 4) * px, height: (template.pixel.height + 4) * px }
+}
+
 /**
  * SVG für die Seitenleiste: alle Frames des Zustands übereinander, per
  * CSS-Animation nacheinander sichtbar; dazu Leuchten, Flackern und Glitch.
@@ -402,16 +430,18 @@ export function pixelSvg(
     count > 1 && options.motion ? `.f{opacity:0;animation:cda-cycle ${period.toFixed(3)}s steps(1,end) infinite}@keyframes cda-cycle{0%{opacity:1}${share}%{opacity:0}100%{opacity:0}}` : '',
     glow ? `.fig{filter:drop-shadow(0 0 1.4px ${glow}) drop-shadow(0 0 3px ${glow}66)}` : '',
     flicker && options.motion ? '.fig{animation:cda-flicker 5s infinite}@keyframes cda-flicker{0%,92%,100%{opacity:1}93%{opacity:.72}94%{opacity:1}96%{opacity:.86}}' : '',
+    options.motion && !isDim ? '.float{animation:cda-float 4.2s ease-in-out infinite}@keyframes cda-float{0%,100%{transform:translateY(0)}50%{transform:translateY(.7px)}}' : '',
     isGlitch && options.motion ? '.glitch{animation:cda-glitch .5s steps(2,end) infinite}@keyframes cda-glitch{0%{transform:translate(0,0)}25%{transform:translate(-1px,0)}50%{transform:translate(1px,0)}75%{transform:translate(0,1px)}}' : '',
     isDim ? '.fig{opacity:.62}' : '',
-    '@media (prefers-reduced-motion:reduce){.f,.fig,.glitch{animation:none!important}.f:first-child{opacity:1}}',
+    '@media (prefers-reduced-motion:reduce){.f,.fig,.glitch,.float{animation:none!important}.f:first-child{opacity:1}}',
   ].join('')
 
-  const px = options.size / Math.max(width, height)
+  // Ganzzahlige Pixelgröße, sonst verschwimmen die Kanten.
+  const px = svgPixelSize(template, options.size)
   return (
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-2 -2 ${width + 4} ${height + 4}" width="${Math.round((width + 4) * px)}" height="${Math.round((height + 4) * px)}" shape-rendering="crispEdges">` +
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-2 -2 ${width + 4} ${height + 4}" width="${(width + 4) * px}" height="${(height + 4) * px}" shape-rendering="crispEdges">` +
     `<style>${css}</style>` +
-    `<g class="fig"><g class="${isGlitch ? 'glitch' : ''}">${groups}</g></g></svg>`
+    `<g class="float"><g class="fig"><g class="${isGlitch ? 'glitch' : ''}">${groups}</g></g></g></svg>`
   )
 }
 

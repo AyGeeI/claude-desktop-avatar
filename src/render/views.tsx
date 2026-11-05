@@ -55,8 +55,8 @@ export function registerViews(on: On, controller: Controller): void {
       }
     } else {
       const { Svg } = $.ui.resolve(e)
-      const svg = avatarSvg(controller, view.mood, 132)
-      if (svg) avatar = <Svg source={svg} alt={`${name}, ${s.mood[view.mood]}`} width={150} height={150} isInteractive={true} />
+      const figure = avatarSvg(controller, view.mood, 160)
+      if (figure) avatar = <Svg source={figure.svg} alt={`${name}, ${s.mood[view.mood]}`} width={figure.width} height={figure.height} isInteractive={true} />
     }
 
     const tabs = (
