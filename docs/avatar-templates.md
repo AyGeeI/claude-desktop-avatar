@@ -1,13 +1,14 @@
-# Avatar-Vorlagen – Format & Anpassung (Entwurf v0)
+# Avatar-Vorlagen – Format & Anpassung (Entwurf v0.2)
 
-> Teil des [Projektplans](PLAN.md) · Stand: 4. November 2026.
-> Dieses Dokument beschreibt, wie Avatare aussehen und sich bewegen, wie du sie anpasst und wie du eigene Vorlagen baust und teilst. Das Format wird in Phase 3 als v1 festgeschrieben; bis dahin sind Änderungen möglich.
+> Teil des [Projektplans](PLAN.md) · Stand: 5. November 2026 (v0.2: nur 2D, Texte auf Deutsch und Englisch).
+> Dieses Dokument beschreibt, wie Avatare aussehen und sich bewegen, wie du sie anpasst und wie du eigene Vorlagen baust und teilst. Das Format wird in Phase 4 als v1 festgeschrieben; bis dahin sind Änderungen möglich.
 
 ## 1. Ziele
 
 - **Anpassen ohne Code:** Farben, Teile (Augen, Accessoires), Größe, Stimme, Name und Persönlichkeit änderst du im Avatar-Studio per Klick.
 - **Eigene Vorlagen ohne App-Änderung:** Eine Vorlage ist ein Ordner mit Grafiken und einer `avatar.json`. Für SVG und Sprites brauchst du weder Build noch Programmierung.
-- **Mehrere Stile:** 2D-Vektor (SVG), Pixel-Art und gezeichnete Frames (Sprites), interaktive Animationen (Rive), später 3D (VRM).
+- **Drei 2D-Stile:** Vektorgrafik (SVG), Pixel-Art und gezeichnete Frames (Sprites), interaktive Animationen (Rive). 3D ist bewusst nicht geplant.
+- **Zweisprachig:** Namen, Beschriftungen und Begrüßungen gibt es auf Deutsch und Englisch.
 - **Sicher teilbar:** Vorlagen sind reine Daten. Die App führt keinen Code aus Vorlagen aus.
 
 ## 2. Begriffe
@@ -18,7 +19,7 @@
 | **Parameter** | ein Regler der Vorlage: Farbe, Auswahl, Schalter oder Zahl |
 | **Avatar-Profil** | deine Ausprägung einer Vorlage: gewählte Werte, Name, Stimme, Persona, Verhalten. Mehrere Profile sind möglich (z. B. „Arbeit" und „Privat"). |
 | **Paket** (`.avatarpack`) | ZIP-Archiv einer Vorlage, optional mit Profil, zum Teilen |
-| **Renderer** | Darstellungsmodul der App für einen Vorlagentyp: `svg`, `sprite`, `rive`, `vrm` |
+| **Renderer** | Darstellungsmodul der App für einen Vorlagentyp: `svg`, `sprite` oder `rive` |
 | **Zustand** (State) | was der Avatar gerade „tut": `idle`, `thinking`, `speaking` … |
 | **Overlay** | Anzeige, die die App unabhängig von der Vorlage darüberlegt: Badge, Fortschrittsring, Mikrofon-Symbol |
 
@@ -48,7 +49,10 @@ Beispiel für die mitgelieferte SVG-Vorlage „Blob":
   "id": "cda.blob",
   "version": "1.0.0",
   "name": { "de": "Blob", "en": "Blob" },
-  "description": { "de": "Ein freundlicher, wabbeliger Begleiter." },
+  "description": {
+    "de": "Ein freundlicher, wabbeliger Begleiter.",
+    "en": "A friendly, wobbly companion."
+  },
   "author": "Claude Desktop Avatar",
   "license": "CC-BY-4.0",
   "renderer": "svg",
@@ -57,33 +61,33 @@ Beispiel für die mitgelieferte SVG-Vorlage „Blob":
   "parameters": {
     "bodyColor": {
       "type": "color",
-      "label": { "de": "Körperfarbe" },
+      "label": { "de": "Körperfarbe", "en": "Body color" },
       "default": "#E07A5F",
       "palette": ["#E07A5F", "#0F766E", "#2563EB", "#9333EA"]
     },
     "eyes": {
       "type": "choice",
-      "label": { "de": "Augen" },
+      "label": { "de": "Augen", "en": "Eyes" },
       "default": "round",
       "options": [
-        { "id": "round", "label": { "de": "Rund" } },
-        { "id": "happy", "label": { "de": "Fröhlich" } },
-        { "id": "sleepy", "label": { "de": "Verschlafen" } }
+        { "id": "round", "label": { "de": "Rund", "en": "Round" } },
+        { "id": "happy", "label": { "de": "Fröhlich", "en": "Happy" } },
+        { "id": "sleepy", "label": { "de": "Verschlafen", "en": "Sleepy" } }
       ]
     },
     "accessory": {
       "type": "choice",
-      "label": { "de": "Accessoire" },
+      "label": { "de": "Accessoire", "en": "Accessory" },
       "default": "none",
       "options": [
-        { "id": "none", "label": { "de": "Keins" } },
-        { "id": "headphones", "label": { "de": "Kopfhörer" } },
-        { "id": "beanie", "label": { "de": "Mütze" } }
+        { "id": "none", "label": { "de": "Keins", "en": "None" } },
+        { "id": "headphones", "label": { "de": "Kopfhörer", "en": "Headphones" } },
+        { "id": "beanie", "label": { "de": "Mütze", "en": "Beanie" } }
       ]
     },
     "wobble": {
       "type": "range",
-      "label": { "de": "Wabbeln" },
+      "label": { "de": "Wabbeln", "en": "Wobble" },
       "default": 0.5,
       "min": 0,
       "max": 1,
@@ -107,10 +111,14 @@ Beispiel für die mitgelieferte SVG-Vorlage „Blob":
     "attention": "sounds/attention.ogg",
     "done": "sounds/done.ogg"
   },
-  "voice": { "lang": "de-DE", "rate": 1.05, "pitch": 1.15, "piper": "de_DE-thorsten-medium" },
+  "voice": {
+    "rate": 1.05,
+    "pitch": 1.15,
+    "piper": { "de": "de_DE-thorsten-medium", "en": "en_US-lessac-medium" }
+  },
   "persona": {
-    "displayName": { "de": "Blob" },
-    "greeting": { "de": "Hallo! Wobei kann ich helfen?" },
+    "displayName": { "de": "Blob", "en": "Blob" },
+    "greeting": { "de": "Hallo! Wobei kann ich helfen?", "en": "Hi! How can I help?" },
     "style": "friendly"
   }
 }
@@ -123,13 +131,13 @@ Beispiel für die mitgelieferte SVG-Vorlage „Blob":
 | `version` | ja | Version der Vorlage nach SemVer |
 | `name`, `description` | `name` ja | mehrsprachig: `{ "de": "…", "en": "…" }` |
 | `author`, `license` | ja | Lizenz als SPDX-Kennung, z. B. `CC-BY-4.0` oder `CC0-1.0` |
-| `renderer` | ja | `svg`, `sprite`, `rive` oder `vrm` |
+| `renderer` | ja | `svg`, `sprite` oder `rive` |
 | `size` | ja | Standard-, Mindest- und Maximalgröße in logischen Pixeln |
 | `hitArea` | nein | klickbare Fläche: `alpha` (aus der Transparenz berechnet, Standard), `{ "circle": [cx, cy, r] }` oder `{ "polygon": [[x, y], …] }`, jeweils relativ (0–1) |
 | `parameters` | nein | anpassbare Regler (Abschnitt 5) |
 | `states` | ja (mindestens `idle`) | unterstützte Zustände und ihr Verhalten (Abschnitt 6) |
 | `mouth` | nein | Lippen-Sync (Abschnitt 7) |
-| `svg`, `sprite`, `rive`, `vrm` | passend zum Renderer | renderer-spezifische Angaben (Abschnitt 8) |
+| `svg`, `sprite`, `rive` | passend zum Renderer | renderer-spezifische Angaben (Abschnitt 8) |
 | `overlay` | nein | Farben und Ankerpunkt der App-Overlays (Badge, Fortschrittsring), z. B. `{ "anchor": [0.85, 0.15], "color": "#E11D48" }` |
 | `sounds` | nein | eigene Hinweistöne je Ereignis (Abschnitt 9) |
 | `voice`, `persona` | nein | Vorschläge für Stimme und Persönlichkeit; das Profil kann sie überschreiben (Abschnitt 9) |
@@ -143,8 +151,9 @@ Beispiel für die mitgelieferte SVG-Vorlage „Blob":
 | `toggle` | Schalter | Leuchten an/aus | Attribut `data-p-<id>="true"` |
 | `range` | Schieberegler (`min`, `max`, `step`) | Wabbeln 0–1 | CSS-Variable `--p-<id>`, Rive-Zahleneingang |
 
-- Jeder Parameter hat `label` (mehrsprachig) und `default`. `choice` hat zusätzlich `options` mit ASCII-`id` und mehrsprachigem `label`.
-- Allgemeine Einstellungen gibt die App selbst vor; Vorlagen müssen sie nicht definieren: Größe, Deckkraft, Spiegeln (Blick nach links oder rechts), Animationsstärke, „Bewegung reduzieren".
+- Jeder Parameter hat `label` und `default`. `choice` hat zusätzlich `options` mit ASCII-`id` und `label`.
+- **Texte:** Jede Beschriftung ist ein Objekt mit Sprachcodes; empfohlen sind `de` und `en`. Fehlt die Sprache der Oberfläche, nimmt die App `en`, dann `de`, dann die erste vorhandene. Der Validator warnt, wenn eine der beiden Sprachen fehlt.
+- Allgemeine Einstellungen gibt die App selbst vor; Vorlagen müssen sie nicht definieren: Größe, Deckkraft, Spiegeln (Blick nach links oder rechts), Animationsstärke, reduzierte Animationen.
 
 ## 6. Zustände
 
@@ -153,13 +162,13 @@ Beispiel für die mitgelieferte SVG-Vorlage „Blob":
 | `idle` | Ruhe, gelegentliches Blinzeln | keiner der anderen Zustände | – (Pflicht) |
 | `hover` | Mauszeiger über dem Avatar | Zeiger | `idle` |
 | `dragging` | wird verschoben | Ziehen | `idle` |
-| `listening` | hört zu | Push-to-Talk aktiv | `idle` |
+| `listening` | hört zu | Sprechtaste aktiv | `idle` |
 | `thinking` | wartet auf die Antwort | Anfrage gesendet, noch kein Text | `idle` |
 | `speaking` | antwortet bzw. spricht | Text-Streaming, Sprachausgabe | `idle` |
 | `working` | Claude arbeitet in einer Sitzung | Werkzeug-Schritte laufen | `thinking` |
 | `attention` | braucht dich | Freigabe oder Eingabe nötig | `idle` (+ Badge „!") |
 | `success` | fertig (einmalig) | Sitzung hat ihre Aufgabe beendet | `idle` |
-| `error` | Fehler (einmalig) | Abbruch, API-Fehler | `idle` |
+| `error` | Fehler (einmalig) | Abbruch, Fehler | `idle` |
 | `sleeping` | schläft | Inaktivität, Nicht stören | `idle` |
 
 - **Eigenschaften je Zustand:** `loop` (Endlosanimation), `once` + `duration` in ms (einmalig, danach zurück), `fallback` (Ersatz, wenn die Vorlage den Zustand nicht gestaltet), optional `minDuration` gegen Flackern.
@@ -168,10 +177,10 @@ Beispiel für die mitgelieferte SVG-Vorlage „Blob":
 
 ## 7. Mund & Lippen-Sync
 
-- Die App liefert etwa 30-mal pro Sekunde eine Mundöffnung `mouthOpen` zwischen 0 und 1, berechnet aus der Lautstärke der Sprachausgabe. Das funktioniert mit jeder Stimme.
+- Die App liefert etwa 30-mal pro Sekunde eine Mundöffnung `mouthOpen` zwischen 0 und 1, berechnet aus der Lautstärke der Sprachausgabe. Das funktioniert mit jeder Stimme und in beiden Sprachen.
 - `"mode": "continuous"`: Die Vorlage nutzt die CSS-Variable `--mouth-open` direkt, z. B. für eine stufenlose Skalierung.
 - `"mode": "steps"`: Die App bildet den Wert über die Schwellen in `steps` auf `closed`, `half` und `open` ab und setzt `data-mouth` entsprechend.
-- Später: Viseme (z. B. `A`, `E`, `O`, `M`, `F`), wenn ein Sprachanbieter Lautzeitpunkte liefert. Bei VRM-Modellen werden sie auf die Standard-Ausdrücke `aa`, `ih`, `ou`, `ee`, `oh` abgebildet.
+- Später: Viseme (z. B. `A`, `E`, `O`, `M`, `F`), wenn ein Sprachanbieter Lautzeitpunkte liefert.
 
 ## 8. Renderer
 
@@ -192,7 +201,7 @@ Beispiel für die mitgelieferte SVG-Vorlage „Blob":
 | `--p-<id>` | Farbe oder Zahl | Farb- und Zahlen-Parameter |
 | `--mouth-open` | 0–1 | kontinuierliche Mundöffnung |
 | `--look-x`, `--look-y` | −1 bis 1 | Blickrichtung zum Mauszeiger |
-| `--intensity` | 0–1 | Animationsstärke; bei „Bewegung reduzieren" 0 |
+| `--intensity` | 0–1 | Animationsstärke; bei reduzierten Animationen 0 |
 
 Ausschnitt `avatar.svg`:
 
@@ -310,35 +319,17 @@ Ausschnitt `style.css`:
 ```
 
 - Die App steuert die State Machine der `.riv`-Datei über Eingänge.
-- Farb-Parameter brauchen Data Binding in der Rive-Datei; das wird in Phase 3 geprüft.
+- Farb-Parameter brauchen Data Binding in der Rive-Datei; das wird in Phase 4 geprüft.
 - Die Rive-Runtime ist Open Source, für den Rive-Editor gelten dessen eigene Lizenz- und Preisbedingungen.
-
-### 8.4 `vrm` – 3D (später)
-
-```json
-{
-  "renderer": "vrm",
-  "vrm": {
-    "file": "model.vrm",
-    "framing": "bust",
-    "animations": { "idle": "anims/idle.vrma", "working": "anims/typing.vrma", "success": "anims/cheer.vrma" },
-    "expressions": { "success": "happy", "error": "sad", "attention": "surprised" },
-    "visemes": { "half": "ih", "open": "aa" }
-  }
-}
-```
-
-- VRM 1.0 (0.x über `@pixiv/three-vrm` ebenfalls lesbar), Animationen im `.vrma`-Format, Ausdrücke für Emotionen, Blinzeln und Mund.
-- `framing`: `bust` (Brustbild) oder `full` (ganze Figur). Begrenzt auf 30 fps und eine maximale Dateigröße.
 
 ## 9. Töne, Stimme & Persona
 
 - **`sounds`:** eigene Hinweistöne für `attention`, `done`, `error`, `listen-start`, `listen-stop` und `message`. Kurz (unter 1,5 s), als OGG, MP3 oder WAV. Fehlende Töne ersetzt die App aus ihrem Standard-Set.
-- **`voice`:** nur ein Vorschlag, denn verfügbare Stimmen unterscheiden sich je System. Mögliche Angaben: `lang`, `rate`, `pitch` und bevorzugte Stimmen je Anbieter (z. B. `piper`). Die konkrete Stimme wählst du im Profil.
+- **`voice`:** nur ein Vorschlag, denn verfügbare Stimmen unterscheiden sich je System. Mögliche Angaben sind `rate`, `pitch` und bevorzugte Stimmen je Anbieter und Sprache, z. B. `"piper": { "de": "…", "en": "…" }`. Die konkrete Stimme wählst du im Profil.
 - **`persona`:**
-  - `displayName` und `greeting`
+  - `displayName` und `greeting`, jeweils auf Deutsch und Englisch
   - `style`: `concise` (knapp), `friendly` (freundlich), `playful` (verspielt) oder `formal` (förmlich). Der Stil prägt den Chat-Prompt und die Formulierungen des Erzählers.
-  - optional `systemPromptAddon`: höchstens 500 Zeichen. Bei importierten Vorlagen wird der Text angezeigt und erst nach deiner Bestätigung aktiv.
+  - optional `systemPromptAddon`: höchstens 500 Zeichen je Sprache. Bei importierten Vorlagen wird der Text angezeigt und erst nach deiner Bestätigung aktiv.
 
 ## 10. Avatar-Profil
 
@@ -352,29 +343,34 @@ Ein Profil speichert deine Ausprägung einer Vorlage im App-Datenordner:
   "name": "Pixel",
   "parameters": { "bodyColor": "#0F766E", "eyes": "happy", "accessory": "headphones", "wobble": 0.3 },
   "size": 144,
-  "voice": { "provider": "piper", "voice": "de_DE-thorsten-medium", "rate": 0.95 },
+  "voice": {
+    "provider": "piper",
+    "voices": { "de": "de_DE-thorsten-medium", "en": "en_US-lessac-medium" },
+    "rate": 0.95
+  },
   "persona": { "style": "concise" },
   "behavior": { "eyesFollowCursor": true, "sleepAfterMinutes": 15, "snapToEdges": true }
 }
 ```
 
 - Profile verweisen per ID und Versionsbereich auf ihre Vorlage. Fehlt die Vorlage, bietet die App den Import an.
+- Pro Sprache lässt sich eine eigene Stimme hinterlegen; welche gilt, hängt von der Sprache der Antwort ab.
 - Exportierst du ein Profil mit Vorlage, entsteht ein `.avatarpack`. Ein Profil allein ist eine kleine JSON-Datei, praktisch für öffentlich verfügbare Vorlagen.
 
 ## 11. Avatar-Studio
 
 - **Galerie:** mitgelieferte und installierte Vorlagen mit Suche und animierter Vorschau; „Zustände durchspielen" zeigt alle Animationen nacheinander.
-- **Anpassen:** Bedienelemente entstehen automatisch aus `parameters`. Dazu kommen allgemeine Einstellungen, Stimmauswahl mit „Probe hören" und die Persona.
+- **Anpassen:** Bedienelemente entstehen automatisch aus `parameters`. Dazu kommen allgemeine Einstellungen, Stimmauswahl je Sprache mit „Probe hören" und die Persona.
 - **Live-Vorschau:** Änderungen wirken sofort auf den echten Avatar am Desktop.
 - **Verwalten:** Profile anlegen und wechseln, Import und Export als `.avatarpack`, „Als neue Vorlage duplizieren" (kopiert die Vorlage zum Bearbeiten in deinen Vorlagenordner).
-- **Entwicklermodus:** Der Vorlagenordner wird beobachtet (Hot Reload). Validierungsfehler erscheinen direkt im Studio, ein Zustands-Simulator bietet Knöpfe für jeden Zustand und einen Regler für die Mundöffnung.
+- **Entwicklermodus:** Der Vorlagenordner wird beobachtet (Hot Reload). Validierungsfehler erscheinen direkt im Studio, ein Zustands-Simulator bietet Knöpfe für jeden Zustand und einen Regler für die Mundöffnung. Ein Sprachumschalter zeigt die Texte auf Deutsch und Englisch.
 
 ## 12. Sicherheit & Validierung
 
 - **Schema:** Jede `avatar.json` wird gegen das JSON Schema geprüft, das aus den Zod-Typen erzeugt wird. Ungültige Vorlagen werden mit verständlichen Fehlermeldungen abgelehnt.
 - **Pakete:**
-  - Größe: bis 25 MB für 2D, bis 100 MB für VRM; höchstens 500 Dateien.
-  - Nur erlaubte Dateitypen: `.json`, `.svg`, `.css`, `.png`, `.webp`, `.apng`, `.gif`, `.ogg`, `.mp3`, `.wav`, `.riv`, `.vrm`, `.vrma`, `.md`, `.txt` sowie `LICENSE`.
+  - Größe: bis 25 MB, höchstens 500 Dateien.
+  - Nur erlaubte Dateitypen: `.json`, `.svg`, `.css`, `.png`, `.webp`, `.apng`, `.gif`, `.ogg`, `.mp3`, `.wav`, `.riv`, `.md`, `.txt` sowie `LICENSE`.
   - Keine absoluten Pfade, keine `..`-Segmente und keine symbolischen Links. Entpackt wird nur in den Vorlagenordner der App.
 - **SVG:** Bereinigung mit DOMPurify (SVG-Profil). Entfernt werden `<script>`, `<foreignObject>`, Event-Attribute (`on…`), `javascript:`-URLs und externe Verweise. Erlaubt sind nur interne Referenzen (`#id`) und Dateien aus dem Paket.
 - **CSS:** kein `@import` und kein externes `url()`. Relative Verweise werden auf lokale Blob-URLs umgeschrieben, die Styles sind per Shadow DOM isoliert.
@@ -394,7 +390,8 @@ Ein Profil speichert deine Ausprägung einer Vorlage im App-Datenordner:
   npx avatar-pack pack ./mein-avatar
   ```
 
-- **Teilen:** ab Phase 3 per `.avatarpack`-Datei. Später kommt eine Galerie als GitHub-Repository mit `index.json`: Einreichungen laufen über Pull Requests, die CI validiert sie und erzeugt Vorschaubilder, und die App zeigt die Galerie mit Installieren-Knopf.
+- **Teilen:** ab Phase 4 per `.avatarpack`-Datei. Später kommt eine Galerie als GitHub-Repository mit `index.json`: Einreichungen laufen über Pull Requests, die CI validiert sie und erzeugt Vorschaubilder, und die App zeigt die Galerie mit Installieren-Knopf.
+- **Lizenz:** Die mitgelieferten Vorlagen stehen unter CC BY 4.0. Eigene Vorlagen geben ihre Lizenz im Manifest an.
 - **Markenrecht:** Vorlagen dürfen keine fremden Logos oder Marken nachbilden, auch nicht das Claude-Logo.
 
 ## 14. Versionierung
@@ -406,5 +403,4 @@ Ein Profil speichert deine Ausprägung einer Vorlage im App-Datenordner:
 
 - Welche Sprachanbieter liefern Viseme bzw. Lautzeitpunkte (Azure ja, weitere prüfen)?
 - Farb-Parameter in Rive über Data Binding
-- Lizenzen von Animationsquellen für VRM (z. B. VRoid, Mixamo)
-- Live2D bleibt wegen der proprietären SDK-Lizenz bewusst außen vor.
+- 3D (z. B. VRM) und Live2D sind bewusst nicht geplant.
