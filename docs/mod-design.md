@@ -1,6 +1,6 @@
 # Mod-Konzept – Ereignisse, Sprache, Desktop-Begleiter
 
-> Teil des [Projektplans](PLAN.md) · Stand: 5. November 2026 (v0.4: Desktop-Begleiter).
+> Teil des [Projektplans](PLAN.md) · Stand: 5. November 2026 (v0.5: umgesetzt; Protokoll in Abschnitt 6.6 entspricht dem Code).
 > Die Angaben zur Mod-Schnittstelle stammen aus den Typen und der Referenz, die Claude Code für Mods mitliefert (geprüft mit Version 2.1.318), die Angaben zu `/voice` aus der offiziellen Doku. Offene Punkte prüft Phase 0.
 
 ## 1. Bausteine
@@ -201,36 +201,48 @@ Bei mehreren Sitzungen zeigt das Eingabefeld eine Auswahl der Sitzung; Standard 
 
 ### 6.6 Verbindung zur Mod
 
-- **Mod → Begleiter:** Die Mod schreibt `companion\state.json`; der Begleiter überwacht die Datei. `$.process.spawn` kann stdin nur einmal beim Start beschreiben, deshalb der Weg über die Datei. Liest der Begleiter einen halb geschriebenen Stand, liest er einfach noch einmal.
+- **Start:** `powershell.exe -NoProfile -NonInteractive -ExecutionPolicy Bypass -Sta -File companion\avatar.ps1 -StateDir <Datenordner> -PluginRoot <Mod-Ordner> -Owner <Sitzung>`. Das Skript übersetzt `Companion.cs` einmal je Quelltextstand zu `companion\bin\Companion-<hash>.dll` und startet das Fenster. Ein benannter Mutex verhindert zwei Fenster.
+- **Mod → Begleiter:** Die Mod schreibt `companion\state.json` (alle 2 s und bei jeder Änderung); der Begleiter liest die Datei alle 120 ms. `$.process.spawn` kann stdin nur einmal beim Start beschreiben, deshalb der Weg über die Datei. Liest der Begleiter einen halb geschriebenen Stand, liest er einfach noch einmal.
 
   ```json
   {
-    "seq": 42,
-    "heartbeatAt": 1762300000000,
-    "state": "working",
-    "bubble": { "text": "webshop · Schritt 3/7 · Führt die Tests aus", "isUrgent": false },
+    "v": 1, "seq": 42, "heartbeatAt": 1762300000000, "owner": "3f6c…", "quit": false,
+    "visible": true, "ghost": false, "lang": "de", "name": "Vela",
+    "mood": "working", "title": "Vela · arbeitet", "step": "Tests laufen",
+    "plan": { "done": 2, "total": 7, "current": "Tests reparieren" }, "attention": "",
+    "bubble": { "n": 12, "lines": ["webshop-api · 2/7 · Tests laufen"], "isUrgent": false, "showMs": -1 },
     "sessions": [
-      { "id": "3f6c…", "project": "webshop", "state": "working", "needsYou": false },
-      { "id": "9a2e…", "project": "api", "state": "attention", "needsYou": true }
+      { "id": "3f6c…", "project": "webshop-api", "mood": "working", "label": "arbeitet", "step": "Tests laufen", "needsYou": false, "isSelf": true },
+      { "id": "9a2e…", "project": "api", "mood": "attention", "label": "braucht dich", "step": "", "needsYou": true, "isSelf": false }
     ],
-    "say": [{ "id": "a17", "text": "Ich brauche deine Freigabe.", "lang": "de", "priority": "urgent" }],
-    "sound": "attention",
-    "template": { "id": "cda.blob", "parameters": { "bodyColor": "#0F766E" }, "scale": 4 },
-    "isVisible": true
+    "say": [{ "n": 7, "text": "Ich brauche deine Freigabe.", "lang": "de", "isUrgent": true, "at": 1762299999000 }],
+    "stopSpeech": 0,
+    "sound": { "n": 3, "path": "C:\\…\\sounds\\attention.wav" },
+    "template": { "dir": "C:\\…\\templates\\vela", "file": "pixel.json", "params": { "glow": "#00e5ff" }, "scale": 4 },
+    "speech": { "enabled": true, "voiceDe": "", "voiceEn": "" },
+    "hotkey": "Ctrl+Alt+Space", "verbosity": "normal", "voiceMode": false
   }
   ```
 
-- **Begleiter → Mod:** eine JSON-Zeile pro Meldung auf stdout, die die Mod über den Ereignisstrom von `$.process.spawn` liest:
+  `bubble.showMs`: größer 0 = so lange zeigen, 0 = bis „Achtung“ vorbei ist, −1 = nur Laufschrift. Neue Einträge in `say`, `sound` und `bubble` erkennt der Begleiter an der Nummer `n`; `stopSpeech` zählt Abbrüche hoch.
+
+- **Begleiter → Mod:** eine JSON-Zeile pro Meldung auf stdout (nur ASCII, alles andere als `\uXXXX`), die die Mod über den Ereignisstrom von `$.process.spawn` liest:
 
   ```text
-  {"type":"ready","version":1}
-  {"type":"prompt","text":"Wie formatiere ich ein Datum nach ISO 8601?","session":"3f6c…"}
-  {"type":"command","name":"status"}
-  {"type":"spoken","id":"a17"}
-  {"type":"moved","x":1610,"y":880}
+  {"type":"ready","version":1,"voices":[{"name":"Microsoft Hedda Desktop","culture":"de-DE"}],"canSpeak":true,"uiCulture":"de-DE"}
+  {"type":"prompt","text":"Wie formatiere ich ein Datum nach ISO 8601?","session":"9a2e…"}
+  {"type":"command","name":"verbosity","value":"quiet"}
+  {"type":"speaking","isSpeaking":true}
+  {"type":"spoken","n":7}
+  {"type":"moved","x":1610,"y":880,"scale":5}
+  {"type":"alive"}
+  {"type":"log","message":"Tastenkürzel Ctrl+Alt+Space ist schon belegt."}
   ```
 
-- Aufträge prüft die Mod wie in Abschnitt 5.2 und schickt sie mit `$.prompt.submit` an die Sitzung. Für eine andere Sitzung landet der Auftrag in deren Eingangsdatei (Abschnitt 8).
+  Befehle: `status`, `stop`, `summary`, `repeat`, `usage`, `verbosity`, `voiceMode`, `speech`, `ghost`, `test`, `quit`.
+
+- **Ende:** `quit: true` in der Zustandsdatei, eine andere Sitzung als `owner` für mehr als 6 s, 20 s ohne neuen Stand (nach dem Ruhezustand mit Schonfrist) oder eine geschlossene Ausgabe (die Mod ist weg) beenden den Begleiter. Stürzt er ab, startet die Mod ihn neu, höchstens dreimal in fünf Minuten.
+- Aufträge prüft die Mod wie in Abschnitt 5.2 und schickt sie mit `$.prompt.submit({ text, asUser: true })` an die Sitzung. Für eine andere Sitzung landet der Auftrag in deren Eingangsdatei (Abschnitt 8).
 
 ## 7. Anzeige in Claude Code
 

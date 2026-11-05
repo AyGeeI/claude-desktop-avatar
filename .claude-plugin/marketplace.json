@@ -1,6 +1,9 @@
 {
   "name": "claude-desktop-avatar",
-  "owner": { "name": "AyGeeI" },
+  "description": "Claude Desktop Avatar: ein Jarvis-artiger Desktop-Begleiter für Claude Code (Windows), mit anpassbaren Vorlagen, Sprachausgabe und Status aller Sitzungen.",
+  "owner": {
+    "name": "AyGeeI"
+  },
   "plugins": [
     {
       "name": "avatar",

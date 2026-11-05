@@ -1,7 +1,7 @@
-# Avatar-Vorlagen – Format & Anpassung (Entwurf v0.4)
+# Avatar-Vorlagen – Format & Anpassung (Format v1)
 
-> Teil des [Projektplans](PLAN.md) · Stand: 5. November 2026 (v0.4: Pixel-Variante auch für den Desktop-Avatar, Mund-Frames für die Lippenbewegung).
-> Dieses Dokument beschreibt, wie der Avatar aussieht und sich bewegt, wie du ihn anpasst und wie du eigene Vorlagen baust. Das Format wird in Phase 3 als v1 festgeschrieben.
+> Teil des [Projektplans](PLAN.md) · Stand: 5. November 2026 (v1: umgesetzt; durchscheinende Palettenfarben, Effekte, Mundformen).
+> Dieses Dokument beschreibt, wie der Avatar aussieht und sich bewegt, wie du ihn anpasst und wie du eigene Vorlagen baust. Die mitgelieferte Vorlage [Vela](../templates/vela/) entsteht aus [`tools/make-vela.py`](../tools/make-vela.py) und zeigt alle Möglichkeiten.
 
 ## 1. Ziele
 
@@ -263,13 +263,20 @@ Die Pixel-Variante ist die Hauptdarstellung:
 
 (Im Beispiel sind nicht alle Frames ausgeschrieben.)
 
-- **Palette:** ein Zeichen pro Farbe. Werte sind eine Farbe (`#RRGGBB`), `transparent` (der Hintergrund des Terminals) oder ein Parameter, optional abgedunkelt bzw. aufgehellt (`shade` von −1 bis 1).
+- **Palette:** ein Zeichen pro Farbe. Werte sind eine Farbe (`#RRGGBB` oder `#RRGGBBAA` mit Deckkraft), `transparent` (der Hintergrund) oder ein Parameter: `{ "param": "glow" }`, optional abgedunkelt bzw. aufgehellt (`shade` von −1 bis 1) und durchscheinend (`alpha` von 0 bis 1), etwa `{ "param": "glow", "alpha": 0.55 }` für einen Hologramm-Ring.
 - **Frames:** Zeilen aus Palettenzeichen, alle genau `width` breit und `height` hoch; höchstens 128 × 128 Pixel.
 - **Zustände:** Frame-Folge und Bildrate, höchstens 12 Bilder pro Sekunde. Fehlt ein Zustand, gilt der Fallback aus dem Manifest.
-- **Overlays:** Frames, die je nach Auswahl- oder Schalter-Parameter über jeden Frame gelegt werden; ihre nicht transparenten Pixel überdecken.
-- **Mund:** vier Overlay-Frames für die Mundformen geschlossen, halb, offen und rund. Am Desktop-Avatar wählt der Begleiter sie passend zu den Viseme-Ereignissen der Sprachausgabe. Im Terminal wechseln sie beim Sprechen im Takt. Fehlen sie, nutzt `speaking` seine eigenen Frames.
+- **Overlays:** Frames, die je nach Auswahl- oder Schalter-Parameter über jeden Frame gelegt werden (Schlüssel ist der Wert, bei Schaltern `true`/`false`). Deckende Pixel überdecken, durchscheinende werden darübergemischt (Alpha „über“), so scheinen etwa die Augen durch ein Visier.
+- **Mund:** vier Overlay-Frames für die Mundformen geschlossen, halb, offen und rund; sie sollten die Haut rund um den Mund mitzeichnen, damit der Grundmund verschwindet. Am Desktop-Avatar wählt der Begleiter sie passend zu den Visemen der Sprachausgabe: 0 und 21 (Stille, p/b/m) → geschlossen; 1, 2, 9, 11 (a-Laute) → offen; 3, 7, 8, 10 (o/u/w) → rund; alle anderen → halb. In der Seitenleiste zeigt `speaking` seine eigenen Frames.
+- **Effekte** (`effects`, alle optional):
+  - `scanlines` (Standard an): am Desktop wird die unterste Bildpunktreihe jedes Vorlagenpixels abgedunkelt.
+  - `flicker` (Standard an): kurzes Flackern alle paar Sekunden und selten ein Glitch, wie bei einem Hologramm.
+  - `glitch`: Liste von Zuständen mit dauerndem Glitch (Zeilenbänder springen seitlich), etwa `["error"]`.
+  - `dim`: Zustände, in denen die Figur gedämpft erscheint, etwa `["sleeping"]`.
+  - `glow`: Farbe des Leuchtens um die Figur, meist ein Parameter (`{ "param": "glow" }`). Bei „Achtung“ leuchtet sie gelb und pulsiert, bei Fehlern rot.
+- **Schweben:** Desktop-Fenster und Seitenleiste lassen die Figur sanft auf und ab schweben; Frames sollten deshalb nicht selbst wackeln, sonst verrutschen Overlays.
 - **Farben:** Im Terminal mischt das Raster höchstens 1024 Farbpaare gleichzeitig. Kleine Paletten sehen überall am besten aus.
-- **Größe:** 24 bis 48 Pixel Kantenlänge haben sich für Desktop-Haustiere bewährt; größer wird es im Terminal schnell sperrig.
+- **Größe:** 24 bis 48 Pixel Kantenlänge haben sich für Desktop-Haustiere bewährt; größer wird es im Terminal schnell sperrig. Vela ist 32 × 40 Pixel groß. In der Seitenleiste wird die Figur ganzzahlig vergrößert, damit die Kanten scharf bleiben.
 
 ## 9. Töne, Stimme & Persona
 
@@ -277,8 +284,8 @@ Die Pixel-Variante ist die Hauptdarstellung:
 - **`voice`:** vorgeschlagene Windows-Stimmen je Sprache. Ist eine Stimme nicht installiert, nimmt die Mod die Standardstimme der Sprache.
 - **`persona`:**
   - `displayName` und `greeting`, jeweils auf Deutsch und Englisch; der Name im Profil hat Vorrang
-  - `style`: `concise` (knapp), `friendly` (freundlich), `playful` (verspielt), `formal` (förmlich) oder `butler` (höflich wie ein britischer Butler, „Sehr wohl."). Der Stil prägt die Texte des Erzählers und den Hinweis, den die Mod im Sprachmodus an Prompts anhängt.
-  - optional `promptAddon`: höchstens 300 Zeichen je Sprache, die im Sprachmodus zusätzlich an den Hinweis angehängt werden. Bei fremden Vorlagen zeigt die Mod den Text an und aktiviert ihn erst nach deiner Bestätigung (Schutz vor Prompt-Injection).
+  - `style`: `neon` (cool und knapp, Netz-Jargon), `friendly` (freundlich), `concise` (knapp), `formal` (förmlich) oder `butler` (höflich wie ein britischer Butler, „Sehr wohl.“). Der Stil prägt die Texte des Erzählers; mit `/avatar stil …` lässt er sich unabhängig von der Vorlage wählen.
+  - `promptAddon` ist noch nicht umgesetzt (siehe Offene Punkte).
 
 ## 10. Profil
 
@@ -330,5 +337,6 @@ Das Profil liegt in `$.store` und gilt für alle Sitzungen:
 
 - Läuft CSS-Animation im SVG auch im Mobil-Sandbox-Rahmen flüssig?
 - Ist eine automatische Abdunklung (`shade`) mit dem Farblimit des Rasters gut genug?
-- Welche Zuordnung der Windows-Viseme (0–21) zu den vier Mundformen wirkt natürlich?
+- `promptAddon` (eigener Text für den Sprachmodus) mit Bestätigung bei fremden Vorlagen.
+- Eigene SVG-Vorlagen sind im Format vorgesehen und werden in der Seitenleiste gezeigt; der Desktop-Avatar nutzt immer die Pixel-Variante.
 - 3D und Live2D sind bewusst nicht geplant.

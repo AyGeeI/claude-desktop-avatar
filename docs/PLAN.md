@@ -1,6 +1,6 @@
 # Claude Desktop Avatar – Projektplan
 
-> **Status:** Entwurf v0.4 · **Stand:** 5. November 2026 · **Neu:** Der Avatar sitzt frei verschiebbar auf dem Desktop, ähnlich wie die Haustiere in der Codex-App. Möglich macht das ein Begleiter-Fenster, das die Mod mit Windows-Bordmitteln startet.
+> **Status:** v0.5, erste lauffähige Fassung · **Stand:** 5. November 2026 · **Neu:** Mod, Desktop-Begleiter (C#/WPF über Windows PowerShell 5.1), Vorlage „Vela“, Töne und Tests sind umgesetzt. Siehe Abschnitt 12 für den Stand und was noch unter Windows zu prüfen ist.
 >
 > Detailkonzepte: [Mod-Konzept](mod-design.md) · [Avatar-Vorlagen](avatar-templates.md)
 
@@ -244,7 +244,7 @@ sequenceDiagram
 - **Aufträge vom Desktop-Avatar:** gehen als normaler Prompt in die Sitzung, mit allen Freigabe-Regeln von Claude Code.
 - **Vorlagen:** reine Daten; weder Mod noch Begleiter führen etwas daraus aus.
 
-## 8. Projektstruktur (Vorschlag)
+## 8. Projektstruktur
 
 Das Repository ist zugleich die Mod und ihr Marketplace:
 
@@ -255,21 +255,28 @@ claude-desktop-avatar/
 │   └── marketplace.json       # macht das Repo installierbar
 ├── hooks/
 │   ├── hooks.json             # { "modules": ["./register.tsx"] }
-│   └── register.tsx           # Einstieg: registriert alle Hooks
+│   └── register.tsx           # Einstieg: Hooks, baut das Io-Objekt aus $
 ├── src/
-│   ├── events.ts              # Ereignis-Adapter
-│   ├── narrator.ts            # Texte DE/EN, Stufen, Drosselung
-│   ├── voice.ts               # Befehle, Vorlesen, Warteschlange
+│   ├── io.ts                  # Verbindung zur Engine (nie $ weiterreichen)
+│   ├── controller.ts          # Laufzeitzustand, Ereignisse → Anzeige und Ansagen
+│   ├── tools.ts               # Werkzeugaufrufe → Schritte, Plan-Fortschritt
+│   ├── commands.ts            # Befehle an den Avatar, /avatar
+│   ├── persona.ts             # Sätze je Stil (neon, freundlich, knapp, förmlich, Butler)
+│   ├── i18n.ts                # Texte DE/EN
+│   ├── settings.ts            # Optionen und gespeicherte Änderungen
 │   ├── companion.ts           # Begleiter starten, überwachen, Zustandsdatei schreiben
-│   ├── sessions.ts            # gemeinsamer Status-Ordner, Sprecher-Wahl
-│   ├── templates.ts           # Vorlagen laden und prüfen
-│   └── render/                # Statuszeile, Band, Spinner, Seitenleiste
+│   ├── sessions.ts            # gemeinsamer Status-Ordner, Sprecher-Wahl, Eingang
+│   ├── templates.ts           # Vorlagen laden, prüfen, zeichnen (Raster, SVG)
+│   ├── util.ts
+│   └── render/                # Seitenleiste, Band, Spinner, Figur
 ├── companion/
-│   └── avatar.ps1             # Desktop-Begleiter (WPF, System.Speech, Töne)
-├── templates/                 # mitgelieferte Vorlagen
-├── sounds/                    # Hinweistöne (WAV)
+│   ├── avatar.ps1             # Start: übersetzt Companion.cs einmal, startet das Fenster
+│   └── Companion.cs           # Desktop-Begleiter (WPF, System.Speech, Töne, Infobereich)
+├── templates/vela/            # mitgelieferte Vorlage (CC BY 4.0)
+├── sounds/                    # Hinweistöne (WAV, CC BY 4.0)
+├── tools/                     # Generatoren für Vela und die Töne
 ├── types/index.d.ts           # Typvertrag für $.state
-├── tests/                     # claude plugin test, Pester
+├── tests/                     # claude plugin test
 └── docs/                      # Plan und Konzepte
 ```
 
@@ -362,14 +369,21 @@ Ein Prototyp prüft unter Windows:
 | 8 | Sprachen | Deutsch und Englisch | beide von Anfang an |
 | 9 | Auslieferung | Mod für Claude Code, kein Installer, nicht kommerziell | Plan ab v0.3 |
 | 10 | Avatar frei auf dem Desktop? | ja, wie die Haustiere in der Codex-App | Desktop-Begleiter mit Windows-Bordmitteln, gestartet von der Mod (v0.4) |
+| 11 | Spracheingabe | `/voice` in Claude Code; am Desktop-Avatar das Windows-Diktat (Win+H, Mikrofon-Knopf in der Schnelleingabe) | keine eigene Spracherkennung nötig |
+| 12 | Erstes Design | eine eigene Figur im Cyberpunk-Stil: „Vela“, holografische Netz-KI | keine Nachbildung bestehender Figuren (Urheber- und Markenrecht); Vorlage unter CC BY 4.0 |
 
-**Offene Frage:**
+**Offene Fragen:** keine. Was noch fehlt, steht in Abschnitt 12.
 
-- **A – Spracheingabe:** Ist `/voice` in Ordnung, obwohl das Audio bei Anthropic in Text umgewandelt wird? Empfehlung: ja, denn der Text geht als Prompt ohnehin an Anthropic, die Erkennung ist gut, und es ist nichts zu installieren. Allerdings muss dafür ein Claude-Code-Fenster im Vordergrund sein. Die lokale Alternative wäre die Windows-eigene Spracherkennung direkt am Desktop-Avatar (Maustaste halten). Ihre Qualität, vor allem für Deutsch, müsste Phase 0 erst prüfen.
+## 12. Stand & nächste Schritte
 
-## 12. Nächste Schritte
+**Umgesetzt (v0.5):** alle Funktionen der Phasen 1 bis 4 in einer ersten Fassung: Desktop-Avatar mit Sprechblase, Laufschrift, Schnelleingabe, Tastenkürzel, Infobereich, Geistmodus, Vollbild-Rücksicht, Lippenbewegung; Ansagen mit Stufen, Ruhezeiten und Drosselung; Befehle an den Avatar; Sprachmodus; mehrere Sitzungen mit Sprecher-Wahl und gezielten Aufträgen; Seitenleiste, Band und Spinner in Claude Code; Vorlage Vela mit Parametern und Overlays; Töne.
 
-1. Frage A klären.
-2. Phase 0: Prototyp der Mod und des Begleiter-Fensters schreiben und unter Windows ausprobieren.
-3. Ergebnisse als ADRs unter `docs/adr/` festhalten.
-4. Pro Phase einen GitHub-Meilenstein mit Issues anlegen.
+**Geprüft ohne Windows:** `claude plugin validate .` ohne Fehler und Warnungen; 10 Tests mit `claude plugin test .`; Typprüfung mit tsc; der Begleiter übersetzt mit C# 5 gegen die Referenz-Assemblys von .NET Framework 4.8 (WPF, System.Speech, Windows Forms); `avatar.ps1` ist mit dem PowerShell-Parser geprüft.
+
+**Als Nächstes unter Windows prüfen:**
+
+1. Erster Start: Übersetzung durch `Add-Type`, Fenster, Position, DPI auf mehreren Monitoren.
+2. Sprachausgabe: welche Stimmen System.Speech findet (Desktop-Stimmen wie „Hedda“, „Zira“), Lippenbewegung.
+3. Tastenkürzel, Windows-Diktat (Win+H) in der Schnelleingabe, Infobereich-Menü, Geistmodus.
+4. Übergabe des Sprechers zwischen zwei Sitzungen und Neustart nach Ruhezustand.
+5. Rückmeldungen als Issues sammeln; danach `promptAddon` und Vorlagen-Pakete.
