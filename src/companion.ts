@@ -6,7 +6,7 @@ import type { CompanionStatus, VoiceInfo } from '../types'
 import { errorText, isRecord, joinPath, safeJson } from './util'
 
 export type CompanionMessage =
-  | { type: 'ready'; version?: number; voices?: VoiceInfo[]; uiCulture?: string }
+  | { type: 'ready'; version?: number; voices?: VoiceInfo[]; uiCulture?: string; canSpeak?: boolean }
   | { type: 'prompt'; text: string; session?: string }
   | { type: 'command'; name: string; value?: string }
   | { type: 'spoken'; n: number }
@@ -14,10 +14,13 @@ export type CompanionMessage =
   | { type: 'speaking'; isSpeaking: boolean }
   | { type: 'error'; message: string }
   | { type: 'log'; message: string }
+  | { type: 'alive' }
 
 export type CompanionOptions = {
   pluginRoot: string
   dataDir: string
+  /** Sitzung, die den Begleiter startet; er beendet sich, wenn eine andere übernimmt. */
+  owner: string
   onMessage: (message: CompanionMessage) => void
   onStatus: (status: CompanionStatus, note?: string) => void
 }
@@ -113,6 +116,8 @@ export class Companion {
       this.options.dataDir,
       '-PluginRoot',
       this.options.pluginRoot,
+      '-Owner',
+      this.options.owner,
     ]
     this.setStatus('starting')
     let stderr = ''

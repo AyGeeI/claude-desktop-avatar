@@ -83,6 +83,8 @@ export class Controller {
   private stateSeq = 0
   private isPublishScheduled = false
   private fallbackSpeechBroken = false
+  private companionCanSpeak = true
+  private isCompanionSpeaking = false
   private permissionTool: string | undefined
   private lastToolInput: ToolInput | undefined
   private hasGreeted = false
@@ -137,6 +139,7 @@ export class Controller {
     this.companion = new Companion(io, {
       pluginRoot: this.pluginRoot,
       dataDir: this.dataDir,
+      owner: this.sessionId,
       onMessage: message => this.safely(() => this.onCompanion(message)),
       onStatus: () => this.publish(),
     })
@@ -283,9 +286,15 @@ export class Controller {
     })
   }
 
+  /** Was die Figur zeigt: während der Desktop-Avatar spricht, „spricht“ sie auch in der Seitenleiste. */
+  displayMood(): AvatarMood {
+    if (this.isCompanionSpeaking && (this.mood === 'idle' || this.mood === 'success' || this.mood === 'thinking')) return 'speaking'
+    return this.mood
+  }
+
   snapshot(): AvatarView {
     return {
-      mood: this.mood,
+      mood: this.displayMood(),
       step: this.step,
       plan: this.plan.progress(),
       lastSaid: this.lastSaid,
@@ -387,7 +396,7 @@ export class Controller {
     const now = Date.now()
     this.lastSpokenAt = now
     this.lastSaid = text
-    if (this.companion?.isRunning) {
+    if (this.companion?.isRunning && this.companionCanSpeak) {
       this.say = [...this.say, { n: ++this.sayN, text, lang: this.lang, isUrgent, at: now }].slice(-8)
       this.pushCompanionNow()
     } else if (!this.fallbackSpeechBroken) {
@@ -442,6 +451,7 @@ export class Controller {
       v: 1,
       seq: ++this.stateSeq,
       heartbeatAt: now,
+      owner: this.sessionId,
       quit,
       visible: this.settings.desktop,
       ghost: this.settings.ghost,
@@ -479,6 +489,7 @@ export class Controller {
       case 'ready':
         this.voices = Array.isArray(message.voices) ? message.voices.slice(0, 40) : []
         this.uiCulture = message.uiCulture
+        this.companionCanSpeak = message.canSpeak !== false
         this.resolveLang()
         this.pushCompanionNow()
         this.publish()
@@ -496,6 +507,10 @@ export class Controller {
         break
       case 'moved':
         if (typeof message.scale === 'number' && message.scale !== this.settings.scale) void this.change({ scale: message.scale })
+        break
+      case 'speaking':
+        this.isCompanionSpeaking = message.isSpeaking === true
+        this.publish()
         break
       case 'error':
       case 'log':
@@ -532,6 +547,12 @@ export class Controller {
         break
       case 'summary':
         await this.runIntent({ kind: 'summary' }, true)
+        break
+      case 'repeat':
+        await this.runIntent({ kind: 'repeat' }, true)
+        break
+      case 'usage':
+        await this.runIntent({ kind: 'usage' }, true)
         break
       case 'test':
         await this.runTest()
