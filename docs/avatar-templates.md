@@ -1,13 +1,13 @@
-# Avatar-Vorlagen – Format & Anpassung (Entwurf v0.3)
+# Avatar-Vorlagen – Format & Anpassung (Entwurf v0.4)
 
-> Teil des [Projektplans](PLAN.md) · Stand: 5. November 2026 (v0.3: Vorlagen für die Mod, Vektor und Pixel).
+> Teil des [Projektplans](PLAN.md) · Stand: 5. November 2026 (v0.4: Pixel-Variante auch für den Desktop-Avatar, Mund-Frames für die Lippenbewegung).
 > Dieses Dokument beschreibt, wie der Avatar aussieht und sich bewegt, wie du ihn anpasst und wie du eigene Vorlagen baust. Das Format wird in Phase 3 als v1 festgeschrieben.
 
 ## 1. Ziele
 
 - **Anpassen ohne Code:** Vorlage, Farben, Teile, Name, Stimme und Stil wählst du mit `/avatar aussehen` in der Seitenleiste, mit Live-Vorschau.
 - **Eigene Vorlagen ohne Änderung an der Mod:** Eine Vorlage ist ein Ordner mit einer `avatar.json`, einer SVG-Datei und einer Pixel-Datei.
-- **Passend zur Oberfläche:** Jede Vorlage hat zwei Darstellungen: eine Vektorgrafik (SVG) für die Desktop-App, VS Code und Mobil und Pixel-Art für das Terminal. Fehlt eine, zeigt die Mod dort einen schlichten Ersatz-Avatar.
+- **Passend zur Oberfläche:** Die **Pixel-Variante** ist Pflicht. Sie zeigt den Avatar auf dem Desktop (scharf vergrößert) und im Terminal. Die **Vektor-Variante** (SVG) ist optional und für die Seitenleiste in der Desktop-App, in VS Code und mobil gedacht. Fehlt sie, zeigt die Mod dort die Pixel-Variante.
 - **Zweisprachig:** Namen, Beschriftungen und Begrüßungen auf Deutsch und Englisch.
 - **Sicher:** Vorlagen sind reine Daten. Die Mod führt nichts aus einer Vorlage aus.
 
@@ -18,8 +18,8 @@
 | **Vorlage** (Template) | Gestaltung, Animationen und anpassbare Parameter |
 | **Parameter** | ein Regler der Vorlage: Farbe, Auswahl, Schalter oder Zahl |
 | **Profil** | deine Ausprägung: Vorlage, gewählte Werte, Name, Stimmen, Stil. Liegt in `$.store` |
-| **SVG-Darstellung** | Vektorgrafik mit CSS-Animation, gezeichnet über das Element `Svg` |
-| **Pixel-Darstellung** | Pixel-Raster aus Textzeilen, im Terminal gezeichnet über `Raster` |
+| **SVG-Darstellung** | Vektorgrafik mit CSS-Animation, in Claude Code gezeichnet über das Element `Svg` |
+| **Pixel-Darstellung** | Pixel-Raster aus Textzeilen: am Desktop-Avatar als vergrößertes Bitmap, im Terminal über `Raster` |
 | **Zustand** | was der Avatar gerade „tut": `idle`, `thinking`, `speaking` … |
 | **Overlay** | was die Mod unabhängig von der Vorlage darüberlegt: Badge, Fortschritt |
 
@@ -28,8 +28,8 @@
 ```text
 mein-avatar/
 ├── avatar.json          # Manifest (Pflicht)
-├── avatar.svg           # SVG-Darstellung (empfohlen)
-├── pixel.json           # Pixel-Darstellung (empfohlen)
+├── pixel.json           # Pixel-Darstellung (Pflicht)
+├── avatar.svg           # SVG-Darstellung (optional)
 ├── sounds/              # optionale Hinweistöne (WAV)
 │   ├── attention.wav
 │   └── done.wav
@@ -119,8 +119,8 @@ mein-avatar/
 | `author`, `license` | ja | Lizenz als SPDX-Kennung, z. B. `CC-BY-4.0` |
 | `parameters` | nein | anpassbare Regler (Abschnitt 5) |
 | `states` | ja (mindestens `idle`) | unterstützte Zustände (Abschnitt 6) |
-| `svg` | empfohlen | SVG-Datei und Anzeigegröße in CSS-Pixeln (Abschnitt 7) |
-| `pixel` | empfohlen | Pixel-Datei (Abschnitt 8) |
+| `pixel` | ja | Pixel-Datei für Desktop-Avatar und Terminal (Abschnitt 8) |
+| `svg` | nein | SVG-Datei und Anzeigegröße in CSS-Pixeln für die Seitenleiste in Claude Code (Abschnitt 7) |
 | `sounds` | nein | eigene Hinweistöne als WAV (Abschnitt 9) |
 | `voice`, `persona` | nein | Vorschläge für Stimmen und Persönlichkeit; das Profil kann sie überschreiben (Abschnitt 9) |
 
@@ -151,9 +151,11 @@ mein-avatar/
 
 - **Eigenschaften:** `once` + `duration` in ms (einmalig, danach zurück), `fallback` (Ersatz, wenn die Vorlage den Zustand nicht gestaltet).
 - **Priorität**, wenn mehreres zutrifft: `speaking` > `attention` > `thinking` > `working` > `success`/`error` > `sleeping` > `idle`.
-- **Kein Lippen-Sync nach Lautstärke:** Die Mod kennt das Audiosignal nicht. `speaking` zeigt eine Sprech-Animation, solange gesprochen wird.
+- **Mundbewegung:** Am Desktop-Avatar steuern die Viseme-Ereignisse der Windows-Sprachausgabe die Mund-Frames (Abschnitt 8). In Claude Code zeigt `speaking` eine allgemeine Sprech-Animation, denn die Mod sieht das Audiosignal nicht.
 
 ## 7. SVG-Darstellung
+
+Optional: nur für die Seitenleiste in Claude Code (Desktop-App, VS Code, Mobil). Der Desktop-Avatar nutzt immer die Pixel-Variante.
 
 - **Eine eigenständige SVG-Datei** mit eingebettetem `<style>`, ohne externe Dateien, Schriften oder Bilder.
 - **Was die Mod einsetzt:** Sie ergänzt nur das Wurzelelement `<svg …>`:
@@ -203,7 +205,10 @@ Ausschnitt `avatar.svg`:
 
 ## 8. Pixel-Darstellung
 
-Im Terminal zeichnet die Mod den Avatar als Raster aus Zeichenzellen. Jede Zelle zeigt zwei übereinanderliegende Pixel als Halbblock (`▀`) mit Vorder- und Hintergrundfarbe. Ein Avatar mit 32 × 32 Pixeln belegt so 32 Spalten und 16 Zeilen.
+Die Pixel-Variante ist die Hauptdarstellung:
+
+- **Desktop-Avatar:** Der Begleiter zeichnet die Frames in ein Bitmap und vergrößert sie ganzzahlig ohne Weichzeichnen (2- bis 8-fach, per Mausrad einstellbar). Ein Avatar mit 32 × 32 Pixeln ist in 4-facher Größe 128 × 128 Bildpunkte groß.
+- **Terminal:** Die Mod zeichnet ihn als Raster aus Zeichenzellen. Jede Zelle zeigt zwei übereinanderliegende Pixel als Halbblock (`▀`) mit Vorder- und Hintergrundfarbe. 32 × 32 Pixel belegen so 32 Spalten und 16 Zeilen.
 
 `pixel.json`:
 
@@ -246,6 +251,12 @@ Im Terminal zeichnet die Mod den Avatar als Raster aus Zeichenzellen. Jede Zelle
   },
   "overlays": {
     "accessory": { "headphones": ["acc-headphones"] }
+  },
+  "mouth": {
+    "closed": "mouth-closed",
+    "half": "mouth-half",
+    "open": "mouth-open",
+    "round": "mouth-round"
   }
 }
 ```
@@ -256,7 +267,9 @@ Im Terminal zeichnet die Mod den Avatar als Raster aus Zeichenzellen. Jede Zelle
 - **Frames:** Zeilen aus Palettenzeichen, alle genau `width` breit und `height` hoch; höchstens 128 × 128 Pixel.
 - **Zustände:** Frame-Folge und Bildrate, höchstens 12 Bilder pro Sekunde. Fehlt ein Zustand, gilt der Fallback aus dem Manifest.
 - **Overlays:** Frames, die je nach Auswahl- oder Schalter-Parameter über jeden Frame gelegt werden; ihre nicht transparenten Pixel überdecken.
-- **Farben:** Das Raster mischt höchstens 1024 Farbpaare gleichzeitig. Kleine Paletten sehen am besten aus.
+- **Mund:** vier Overlay-Frames für die Mundformen geschlossen, halb, offen und rund. Am Desktop-Avatar wählt der Begleiter sie passend zu den Viseme-Ereignissen der Sprachausgabe. Im Terminal wechseln sie beim Sprechen im Takt. Fehlen sie, nutzt `speaking` seine eigenen Frames.
+- **Farben:** Im Terminal mischt das Raster höchstens 1024 Farbpaare gleichzeitig. Kleine Paletten sehen überall am besten aus.
+- **Größe:** 24 bis 48 Pixel Kantenlänge haben sich für Desktop-Haustiere bewährt; größer wird es im Terminal schnell sperrig.
 
 ## 9. Töne, Stimme & Persona
 
@@ -288,8 +301,8 @@ Das Profil liegt in `$.store` und gilt für alle Sitzungen:
 
 ## 11. Anpassen-Ansicht (`/avatar aussehen`)
 
-- Die Ansicht öffnet sich in der Seitenleiste: Auswahl der Vorlage, Bedienelemente aus `parameters`, Name, Stimmen je Sprache mit „Probe hören", Stil und Animationen an/aus.
-- **Live-Vorschau:** Änderungen wirken sofort auf den Avatar, in der Desktop-App als SVG, im Terminal als Pixel-Art.
+- Die Ansicht öffnet sich in der Seitenleiste in Claude Code, alternativ über das Rechtsklick-Menü des Desktop-Avatars: Auswahl der Vorlage, Bedienelemente aus `parameters`, Name, Stimmen je Sprache mit „Probe hören", Stil, Größe und Animationen an/aus.
+- **Live-Vorschau:** Änderungen wirken sofort auf den Desktop-Avatar und auf die Anzeige in Claude Code.
 - **Zustände durchspielen:** Knöpfe für jeden Zustand zeigen alle Animationen.
 - **Für Vorlagen-Ersteller:** Die Ansicht beobachtet den eigenen Vorlagenordner (alle 2 s, solange sie offen ist) und zeigt Prüffehler mit Datei und Zeile.
 
@@ -317,4 +330,5 @@ Das Profil liegt in `$.store` und gilt für alle Sitzungen:
 
 - Läuft CSS-Animation im SVG auch im Mobil-Sandbox-Rahmen flüssig?
 - Ist eine automatische Abdunklung (`shade`) mit dem Farblimit des Rasters gut genug?
+- Welche Zuordnung der Windows-Viseme (0–21) zu den vier Mundformen wirkt natürlich?
 - 3D und Live2D sind bewusst nicht geplant.
